@@ -1,17 +1,25 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using HotelEase.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
+        var user = await UserManager.GetUserAsync(User);
         <li class="nav-item dropdown">
             <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Hello, @User.Identity?.Name!
+                Hello, @user.FullName!
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="AdminDashboard">Admin Dashboard</a></li>
-                <li><a class="dropdown-item" asp-area="" asp-controller="Dashboard" asp-action="UserDashboard">User Dashboard</a></li>
+                @if (user.IsAdmin)
+                {
+                    <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="AdminDashboard">Admin Dashboard</a></li>
+                }
+                else
+                {
+                    <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="UserDashboard">User Dashboard</a></li>
+                }
                 <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a></li>
                 <li>
                     <form method="post" asp-area="Identity" asp-page="/Account/Logout">
