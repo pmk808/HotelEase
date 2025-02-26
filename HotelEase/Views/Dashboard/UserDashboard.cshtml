@@ -1,0 +1,86 @@
+﻿@{
+    ViewData["Title"] = "User Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Welcome to Your Dashboard</h2>
+
+    <!-- Main Tabs (Booking & Transactions) -->
+    <ul class="nav nav-tabs mb-4" id="dashboard-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#bookingTab">Bookings</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#transactionTab">Transactions</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Booking Section -->
+        <section class="tab-pane fade show active" id="bookingTab">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Status</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-pills mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="pill" href="#pending">Pending</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#ongoing">Ongoing</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#cancelled">Cancelled</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#completed">Completed</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <section class="tab-pane fade show active" id="pending">
+                            <p>No pending bookings.</p>
+                        </section>
+                        <section class="tab-pane fade" id="ongoing">
+                            <p>No ongoing bookings.</p>
+                        </section>
+                        <section class="tab-pane fade" id="cancelled">
+                            <p>No cancelled bookings.</p>
+                        </section>
+                        <section class="tab-pane fade" id="completed">
+                            <p>No completed bookings.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transaction Section -->
+        <section class="tab-pane fade" id="transactionTab">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Check-in Date</th>
+                                <th>Check-out Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center">No transactions found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

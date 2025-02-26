@@ -1,0 +1,140 @@
+﻿@model HotelEase.Models.Payment
+@{
+    ViewData["Title"] = "ConfirmPayment";
+    // Simulating transaction status from backend
+    bool isBookingCompleted = true;   // Step 1 - Booking done
+    bool isPaymentCompleted = false;   // Step 2 - Payment done
+    bool isConfirmed = false;         // Step 3 - done
+}
+
+
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<style>
+    .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border: 2px solid #fff; /* White border for visibility */
+    }
+</style>
+
+
+<section id="status">
+    <!-- Transaction Status Steps -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-10 d-flex justify-content-between align-items-center">
+                <!-- Step 1: Booking -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isBookingCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isBookingCompleted ? "fas fa-check" : "fas fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Booking</p>
+                </div>
+
+                <div class="flex-grow-1 border-top border-3 mx-2"></div>
+
+                <!-- Step 2: Payment -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isPaymentCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isPaymentCompleted ? "fas fa-check" : "fas fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Payment</p>
+                </div>
+
+                <div class="flex-grow-1 border-top border-3 mx-2"></div>
+
+                <!-- Step 3: Confirm -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isConfirmed ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isConfirmed ? "fas fa-check" : "fas fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Confirm</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="payment-form">
+    <div class="container mt-5">
+        <div class="card p-5" style="background-color: #223843; color: white;">
+            <h2 class="text-center">Payment Form</h2>
+            <form asp-action="ProcessPayment" method="post" class="needs-validation" novalidate>
+                <div class="row">
+                    <!-- Payment Method -->
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="PaymentMethod" class="form-label">Payment Method</label>
+                        <select asp-for="PaymentMethod" id="paymentMethod" class="form-control" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="GCash">GCash</option>
+                            <option value="Maya">Maya</option>
+                        </select>
+                        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Card Number (only for Credit/Debit) -->
+                    <div class="col-md-12 mb-3" id="cardNumberField" style="display: none;">
+                        <label asp-for="CardNumber" class="form-label">Card Number</label>
+                        <input asp-for="CardNumber" type="text" class="form-control" placeholder="Enter card number" pattern="\d{13,16}" />
+                        <span asp-validation-for="CardNumber" class="text-danger"></span>
+                    </div>
+
+                    <!-- Phone Number / Email (for PayPal, GCash, Maya) -->
+                    <div class="col-md-12 mb-3" id="phoneNumberField" style="display: none;">
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number / Email</label>
+                        <input asp-for="PhoneNumber" type="text" class="form-control" placeholder="Enter phone number or email" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Amount Due -->
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="AmountDue" class="form-label">Amount Due</label>
+                        <input asp-for="AmountDue" type="text" class="form-control" readonly value="100.00" /> <!-- Dynamic value from backend -->
+                        <span asp-validation-for="AmountDue" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a asp-controller="Home" asp-action="ConfirmPay" class="btn btn-success">Confirm Booking</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.getElementById("paymentMethod").addEventListener("change", function () {
+        let selectedMethod = this.value;
+        let cardField = document.getElementById("cardNumberField");
+        let phoneField = document.getElementById("phoneNumberField");
+
+        if (selectedMethod === "Credit Card" || selectedMethod === "Debit Card") {
+            cardField.style.display = "block";
+            phoneField.style.display = "none";
+        } else if (selectedMethod === "PayPal" || selectedMethod === "GCash" || selectedMethod === "Maya") {
+            cardField.style.display = "none";
+            phoneField.style.display = "block";
+        } else {
+            cardField.style.display = "none";
+            phoneField.style.display = "none";
+        }
+    });
+</script>

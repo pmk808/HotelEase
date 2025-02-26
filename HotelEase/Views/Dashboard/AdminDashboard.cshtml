@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<style>
+    /* Custom sidebar styles */
+
+
+        .sidebar .list-group-item {
+            color: #D77A61;
+            border: none;
+            font-weight: bold;
+        }
+
+            .sidebar .list-group-item.active {
+                background-color: #D77A61;
+                color: white;
+            }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="col-md-3 col-lg-2 sidebar">
+            <h2 class="mb-4">Admin Dashboard</h2>
+            <div class="list-group">
+                <a href="#inventoryTab" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
+                    Inventory
+                </a>
+                <a href="#transactionTab" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    Bookings
+                </a>
+            </div>
+        </nav>
+
+        <!-- Content Section -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="tab-content">
+                <!-- Inventory Section -->
+                <section class="tab-pane fade show active" id="inventoryTab">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Inventory Management</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs mb-3">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="pill" href="#roomInventory">Room Inventory</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="pill" href="#housekeepingInventory">Housekeeping</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="pill" href="#maintenanceInventory">Maintenance</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+                                <section class="tab-pane fade show active" id="roomInventory">
+                                    <p>Manage room availability, conditions, and assignments.</p>
+                                </section>
+                                <section class="tab-pane fade" id="housekeepingInventory">
+                                    <p>Monitor cleaning schedules and housekeeping supplies.</p>
+                                </section>
+                                <section class="tab-pane fade" id="maintenanceInventory">
+                                    <p>Track maintenance requests and completed repairs.</p>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Bookings History Section -->
+                <section class="tab-pane fade" id="transactionTab">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Booking History</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Room ID</th>
+                                        <th>Check-in Date</th>
+                                        <th>Check-out Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="text-center">No transactions found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>

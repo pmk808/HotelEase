@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Room Categories";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="fs-1">STANDARD SINGLE BED ROOM</h1>
+        <div class="d-flex align-items-center">
+            <span class="status-indicator me-2"></span>
+            <span class="fs-4 fw-bold">Available</span>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <img src="~/imgs/deluxe.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="~/imgs/singlebed.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="~/imgs/room.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="~/imgs/pool.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="~/imgs/twinbed.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="~/imgs/suite.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+    </div>
+
+    <h3 class="fw-bold mt-5">Inclusions</h3>
+    <p class="fs-4 mt-4">1 Single Bed, Basic Toiletries, Air-conditioned, TV and Free Wi-Fi</p>
+
+    <h3 class="fw-bold mt-4">Check-in & Check-out</h3>
+    <ul class="fs-5">
+        <li>Check-in: From 3:00 PM (Early check-in subject to availability)</li>
+        <li>Check-out: Before 11:00 AM (Late check-out subject to availability)</li>
+    </ul>
+
+    <h3 class="fw-bold mt-4">Check-in Instructions</h3>
+    <p class="fs-5">
+        Guests will receive an email with check-in instructions on the day their booking is confirmed.
+        A valid ID or passport and a credit card or cash deposit are required at check-in for incidental charges.
+        For more details, please contact us using the information provided in the booking confirmation.
+    </p>
+
+    <h3 class="fw-bold mt-4">Children & Extra Beds</h3>
+    <p class="fs-5">
+        Children 12 years old and under can stay for free using existing bedding.<br>
+        <strong>Breakfast Policy for Kids:</strong><br>
+        Ages 0-5: Free breakfast<br>
+        Ages 6-12: Half-price breakfast<br>
+        <strong>Extra Bed Charge:</strong> ₱1,875 nett per night, inclusive of breakfast.
+    </p>
+
+    <h3 class="fw-bold mt-4">Room Availability Status</h3>
+    <p class="fs-5">
+        <span class="status-indicator bg-success"></span> Green: Lots of rooms available – You can book anytime!<br>
+        <span class="status-indicator bg-warning"></span> Orange: Limited rooms left – Hurry and book soon!<br>
+        <span class="status-indicator bg-danger"></span> Red: Fully booked – No rooms available for the selected date.
+    </p>
+
+    <div class="text-center mt-5">
+        <a asp-controller="Home" asp-action="Form" class="btn btn-primary">Book Now</a>
+    </div>
+</div>
+
+<hr class="divider" style="color: white; background-color: white;"> <!--Divider for Categories and Booking Form-->
+
+<!-- Embedded CSS -->
+<style>
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        background-color: #28a745; /* Green color */
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+}

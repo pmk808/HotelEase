@@ -1,0 +1,168 @@
+﻿@model HotelEase.Models.FormModel
+
+@{
+    ViewData["Title"] = "Booking";
+    bool isBookingCompleted = false;   // Step 1 - Booking not made
+    bool isPaymentCompleted = false;   // Step 2 - Payment not made
+    bool isConfirmed = false;         // Step 3 - Payment not confirmed
+}
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<style>
+    .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border: 2px solid #fff; 
+    }
+</style>
+
+<section id="status">
+    <!-- Transaction Status Steps -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-10 d-flex justify-content-between align-items-center">
+                <!-- Step 1: Booking -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isBookingCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isBookingCompleted ? "fa-solid fa-check" : "fa-solid fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Booking</p>
+                </div>
+
+                <div class="flex-grow-1 border-top border-3 mx-2"></div>
+
+                <!-- Step 2: Payment -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isPaymentCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isPaymentCompleted ? "fa-solid fa-check" : "fa-solid fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Payment</p>
+                </div>
+
+                <div class="flex-grow-1 border-top border-3 mx-2"></div>
+
+                <!-- Step 3: Confirm -->
+                <div class="text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
+                    @(isConfirmed ? "bg-dark text-white" : "bg-secondary text-white")">
+                        <i class="@(isConfirmed ? "fa-solid fa-check" : "fa-solid fa-hourglass-half")"></i>
+                    </div>
+                    <p class="mt-2">Confirm</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="booking-form">
+    <div class="container mt-5">
+        <div class="card p-5" style="background-color: #223843; color: white;">
+            <h2 class="text-center">Hotel Booking Form</h2>
+            <form asp-action="SubmitForm" method="post" class="needs-validation" novalidate>
+                <div class="row">
+                    <!-- Full Name -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FullName" class="form-label">Full Name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" required />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <!-- Email Address -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label">Email Address</label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="Enter your email" required />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Room Type -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RoomType" class="form-label">Room Type</label>
+                        <select asp-for="RoomType" id="roomType" class="form-control" required>
+                            <option value="">Select Room Type</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Deluxe">Deluxe</option>
+                            <option value="Suite">Suite</option>
+                        </select>
+                        <span asp-validation-for="RoomType" class="text-danger"></span>
+                    </div>
+
+                    <!-- Room Bed Type -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RoomBedType" class="form-label">Room Bed Type</label>
+                        <select asp-for="RoomBedType" id="roomBedType" class="form-control" required>
+                            <option value="">Select Room Bed Type</option>
+                        </select>
+                        <span asp-validation-for="RoomBedType" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Check-in Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CheckInDate" class="form-label">Check-in Date</label>
+                        <input asp-for="CheckInDate" type="date" class="form-control" required />
+                        <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                    </div>
+
+                    <!-- Check-out Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CheckOutDate" class="form-label">Check-out Date</label>
+                        <input asp-for="CheckOutDate" type="date" class="form-control" required />
+                        <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-primary">Submit Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Define room types and their available bed types
+            const roomOptions = {
+                "Standard": ["Single Bed Room", "Double Bed Room", "Family Bed Room"],
+                "Deluxe": ["Queen Bed Room", "King Bed Room", "Family Bed Room"],
+                "Suite": ["King Bed Suite", "Presidential Suite", "Family Suite"]
+            };
+
+            const roomTypeSelect = document.getElementById("roomType");
+            const roomBedTypeSelect = document.getElementById("roomBedType");
+
+            roomTypeSelect.addEventListener("change", function () {
+                const selectedRoomType = this.value;
+
+                // Clear existing options
+                roomBedTypeSelect.innerHTML = `<option value="">Select Room Bed Type</option>`;
+
+                // If a valid room type is selected, populate the options
+                if (selectedRoomType && roomOptions[selectedRoomType]) {
+                    roomOptions[selectedRoomType].forEach(bedType => {
+                        const option = document.createElement("option");
+                        option.value = bedType;
+                        option.textContent = bedType;
+                        roomBedTypeSelect.appendChild(option);
+                    });
+                }
+            });
+        });
+    </script>
+}
