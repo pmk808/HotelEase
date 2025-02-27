@@ -18,6 +18,14 @@ namespace HotelEase.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Room>()
+                .Property(r => r.Price)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<Booking>()
+                .Property(b => b.TotalPrice)
+                .HasColumnType("decimal(18,2)");
         }
     }
 }

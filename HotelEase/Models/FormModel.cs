@@ -41,7 +41,7 @@ namespace HotelEase.Models
             _comparisonProperty = comparisonProperty;
         }
 
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             var comparisonValue = validationContext.ObjectType.GetProperty(_comparisonProperty)
                 ?.GetValue(validationContext.ObjectInstance) as DateTime?;

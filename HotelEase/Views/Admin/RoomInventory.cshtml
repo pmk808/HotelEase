@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<HotelEase.Models.Room>
 @{
     ViewData["Title"] = "Room Inventory";
+    var availabilityData = ViewBag.AvailabilityData as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
 <div class="container-fluid">
@@ -21,17 +22,25 @@
                                 <th>Category</th>
                                 <th>Bed Type</th>
                                 <th>Price</th>
+                                <th>Available Rooms</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var room in Model)
                             {
+                                var availableRooms = availabilityData.ContainsKey(room.Id) ? availabilityData[room.Id] : 10;
+                                var statusClass = availableRooms == 0 ? "bg-danger" :
+                                availableRooms < 3 ? "bg-warning" : "bg-success";
+
                                 <tr>
                                     <td>@room.Name</td>
                                     <td>@room.Category</td>
                                     <td>@room.BedType</td>
                                     <td>@room.Price.ToString("C")</td>
+                                    <td>
+                                        <span class="badge @statusClass">@availableRooms</span>
+                                    </td>
                                     <td>
                                         <a asp-action="UpdateInventory" asp-route-id="@room.Id" class="btn btn-info btn-sm">Update Inventory</a>
                                         <a asp-action="EditRoom" asp-route-id="@room.Id" class="btn btn-warning btn-sm">Edit</a>

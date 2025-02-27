@@ -127,9 +127,9 @@ namespace HotelEase.Controllers
 
         public class RoomDetailsViewModel
         {
-            public Room Room { get; set; }
+            public Room? Room { get; set; }
             public DateTime SelectedDate { get; set; }
-            public RoomInventory Availability { get; set; }
+            public RoomInventory? Availability { get; set; }
         }
     }
 }

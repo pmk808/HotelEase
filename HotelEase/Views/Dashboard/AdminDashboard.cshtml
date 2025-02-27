@@ -1,11 +1,201 @@
-﻿<div class="list-group">
-    <a href="#inventoryTab" class="list-group-item list-group-item-action active" data-bs-toggle="pill">
-        Inventory
-    </a>
-    <a href="#transactionTab" class="list-group-item list-group-item-action" data-bs-toggle="pill">
-        Bookings
-    </a>
-    <a asp-controller="Admin" asp-action="RoomInventory" class="list-group-item list-group-item-action">
-        Room Management
-    </a>
+﻿@model IEnumerable<HotelEase.Models.Booking>
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <!-- Main Tabs (Bookings & Room Management) -->
+    <ul class="nav nav-tabs mb-4" id="dashboard-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#bookingTab">Bookings</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Admin" asp-action="RoomInventory">Room Management</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Bookings Section -->
+        <section class="tab-pane fade show active" id="bookingTab">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Management</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-pills mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="pill" href="#pending">Pending</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#ongoing">Ongoing</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#cancelled">Cancelled</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="pill" href="#completed">Completed</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <section class="tab-pane fade show active" id="pending">
+                            @if (Model.Any(b => b.Status == BookingStatus.Pending))
+                            {
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking ID</th>
+                                            <th>Room</th>
+                                            <th>User</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in Model.Where(b => b.Status == BookingStatus.Pending))
+                                        {
+                                            <tr>
+                                                <td>@booking.Id</td>
+                                                <td>@booking.Room?.Name</td>
+                                                <td>@booking.User?.FullName</td>
+                                                <td>@booking.CheckInDate.ToShortDateString()</td>
+                                                <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                                <td>@booking.TotalPrice.ToString("C")</td>
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p>No pending bookings.</p>
+                            }
+                        </section>
+
+                        <section class="tab-pane fade" id="ongoing">
+                            @if (Model.Any(b => b.Status == BookingStatus.Confirmed))
+                            {
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking ID</th>
+                                            <th>Room</th>
+                                            <th>User</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Amount</th>
+                                            <th>Confirmation Code</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in Model.Where(b => b.Status == BookingStatus.Confirmed))
+                                        {
+                                            <tr>
+                                                <td>@booking.Id</td>
+                                                <td>@booking.Room?.Name</td>
+                                                <td>@booking.User?.FullName</td>
+                                                <td>@booking.CheckInDate.ToShortDateString()</td>
+                                                <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                                <td>@booking.TotalPrice.ToString("C")</td>
+                                                <td>@booking.ConfirmationCode</td>
+                                                <td><span class="badge bg-primary">Confirmed</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p>No ongoing bookings.</p>
+                            }
+                        </section>
+
+                        <section class="tab-pane fade" id="cancelled">
+                            @if (Model.Any(b => b.Status == BookingStatus.Cancelled))
+                            {
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking ID</th>
+                                            <th>Room</th>
+                                            <th>User</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Amount</th>
+                                            <th>Date Cancelled</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in Model.Where(b => b.Status == BookingStatus.Cancelled))
+                                        {
+                                            <tr>
+                                                <td>@booking.Id</td>
+                                                <td>@booking.Room?.Name</td>
+                                                <td>@booking.User?.FullName</td>
+                                                <td>@booking.CheckInDate.ToShortDateString()</td>
+                                                <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                                <td>@booking.TotalPrice.ToString("C")</td>
+                                                <td>@booking.BookingDate.ToShortDateString()</td>
+                                                <td><span class="badge bg-danger">Cancelled</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p>No cancelled bookings.</p>
+                            }
+                        </section>
+
+                        <section class="tab-pane fade" id="completed">
+                            @if (Model.Any(b => b.Status == BookingStatus.Completed))
+                            {
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Booking ID</th>
+                                            <th>Room</th>
+                                            <th>User</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Amount</th>
+                                            <th>Confirmation Code</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var booking in Model.Where(b => b.Status == BookingStatus.Completed))
+                                        {
+                                            <tr>
+                                                <td>@booking.Id</td>
+                                                <td>@booking.Room?.Name</td>
+                                                <td>@booking.User?.FullName</td>
+                                                <td>@booking.CheckInDate.ToShortDateString()</td>
+                                                <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                                <td>@booking.TotalPrice.ToString("C")</td>
+                                                <td>@booking.ConfirmationCode</td>
+                                                <td><span class="badge bg-success">Completed</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <p>No completed bookings.</p>
+                            }
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>

@@ -3,16 +3,24 @@ using HotelEase.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HotelEase.Data;
 
 namespace HotelEase.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(
+            ILogger<HomeController> logger,
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
+            _context = context;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -58,7 +66,7 @@ namespace HotelEase.Controllers
                 if (user != null)
                 {
                     model.FullName = user.FullName;
-                    model.Email = user.Email;
+                    model.Email = user.Email ?? string.Empty;
                 }
             }
 
@@ -97,7 +105,10 @@ namespace HotelEase.Controllers
                 if (User.Identity.IsAuthenticated)
                 {
                     var user = await _userManager.GetUserAsync(User);
-                    booking.UserId = user.Id;
+                    if (user != null)
+                    {
+                        booking.UserId = user.Id;
+                    }
                 }
 
                 _context.Bookings.Add(booking);
@@ -105,7 +116,10 @@ namespace HotelEase.Controllers
 
                 // Store the booking ID in TempData for the payment page
                 TempData["BookingId"] = booking.Id;
-                TempData["TotalPrice"] = totalPrice;
+
+                // Convert decimal to string before storing in TempData
+                TempData["TotalPriceString"] = totalPrice.ToString();
+
                 TempData["SuccessMessage"] = "Booking information submitted successfully!";
 
                 return RedirectToAction("Payment");
@@ -114,22 +128,22 @@ namespace HotelEase.Controllers
             return View("Form", model);
         }
 
+
         // Show the Payment Page
-        // Controllers/HomeController.cs - Update existing file
         public IActionResult Payment()
         {
             // Get booking ID and total price from TempData
-            if (TempData["BookingId"] == null || TempData["TotalPrice"] == null)
+            if (TempData["BookingId"] == null || TempData["TotalPriceString"] == null)
             {
                 return RedirectToAction("Index");
             }
 
-            int bookingId = (int)TempData["BookingId"];
-            decimal totalPrice = (decimal)TempData["TotalPrice"];
+            int bookingId = Convert.ToInt32(TempData["BookingId"]);
+            decimal totalPrice = decimal.Parse(TempData["TotalPriceString"].ToString());
 
             // Preserve TempData for potential redirection
             TempData.Keep("BookingId");
-            TempData.Keep("TotalPrice");
+            TempData.Keep("TotalPriceString");
 
             var model = new Payment
             {
@@ -166,9 +180,6 @@ namespace HotelEase.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // In a real application, you would process the payment with a payment gateway here
-                // For this example, we'll just update the booking status
-
                 // Generate a confirmation code
                 booking.ConfirmationCode = GenerateConfirmationCode();
                 booking.Status = BookingStatus.Confirmed;
@@ -176,12 +187,25 @@ namespace HotelEase.Controllers
                 // Update room inventory for each day of the booking
                 for (DateTime date = booking.CheckInDate; date < booking.CheckOutDate; date = date.AddDays(1))
                 {
+                    // Try to find existing inventory
                     var inventory = await _context.RoomInventories
                         .FirstOrDefaultAsync(ri => ri.RoomId == booking.RoomId && ri.Date.Date == date.Date);
 
                     if (inventory != null)
                     {
-                        inventory.AvailableRooms--;
+                        // Ensure we don't go below zero
+                        inventory.AvailableRooms = Math.Max(0, inventory.AvailableRooms - 1);
+                    }
+                    else
+                    {
+                        // Create new inventory record with default values
+                        _context.RoomInventories.Add(new RoomInventory
+                        {
+                            RoomId = booking.RoomId,
+                            Date = date,
+                            TotalRooms = 10,
+                            AvailableRooms = 9  // Start with 9 as 1 is being booked
+                        });
                     }
                 }
 
@@ -210,7 +234,7 @@ namespace HotelEase.Controllers
         public IActionResult ConfirmPay()
         {
             // Get confirmation code from TempData
-            string confirmationCode = TempData["ConfirmationCode"]?.ToString();
+            string? confirmationCode = TempData["ConfirmationCode"]?.ToString();
             if (string.IsNullOrEmpty(confirmationCode))
             {
                 // If there's no confirmation code, redirect to home
@@ -238,6 +262,12 @@ namespace HotelEase.Controllers
             }
 
             return View("ConfirmPay", model);
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
