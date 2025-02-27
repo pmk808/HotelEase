@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-
 namespace HotelEase.Models
 {
     public class Payment
@@ -24,6 +23,8 @@ namespace HotelEase.Models
 
         [Required]
         public DateTime PaymentDate { get; set; } = DateTime.Now;
+
+        // Reference to the booking
+        public int BookingId { get; set; }
     }
 }
-

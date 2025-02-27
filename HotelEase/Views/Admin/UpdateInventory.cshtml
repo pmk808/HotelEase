@@ -1,0 +1,50 @@
+﻿@model HotelEase.Controllers.AdminController.RoomInventoryViewModel
+@{
+    ViewData["Title"] = "Update Inventory";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Update Room Inventory - @Model.RoomName</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateInventory" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="RoomId" />
+                        <input type="hidden" asp-for="RoomName" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Date" class="form-label">Date</label>
+                            <input asp-for="Date" type="date" class="form-control" />
+                            <span asp-validation-for="Date" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="TotalRooms" class="form-label">Total Rooms</label>
+                            <input asp-for="TotalRooms" class="form-control" />
+                            <span asp-validation-for="TotalRooms" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AvailableRooms" class="form-label">Available Rooms</label>
+                            <input asp-for="AvailableRooms" class="form-control" />
+                            <span asp-validation-for="AvailableRooms" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group d-flex justify-content-between">
+                            <a asp-action="RoomInventory" class="btn btn-secondary">Back to List</a>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

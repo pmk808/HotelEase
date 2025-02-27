@@ -1,11 +1,200 @@
-﻿@{
-    ViewData["Title"] = "Room Categories";
+﻿<!-- Views/Room/RDetails.cshtml - Modified version -->
+@model HotelEase.Controllers.RoomController.RoomDetailsViewModel
+@{
+    ViewData["Title"] = "Room Details";
+    var availabilityStatus = Model.Availability?.Status ?? AvailabilityStatus.Available;
+    var statusClass = availabilityStatus == AvailabilityStatus.Available ? "bg-success" :
+                     (availabilityStatus == AvailabilityStatus.LimitedAvailability ? "bg-warning" : "bg-danger");
+    var statusText = availabilityStatus == AvailabilityStatus.Available ? "Available" :
+                    (availabilityStatus == AvailabilityStatus.LimitedAvailability ? "Limited Availability" : "Not Available");
 }
 
-<div class="container mt-4">
-    <h2>Select a Room Category</h2>
-    <p>Choose a category to continue your booking.</p>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="fs-1">@Model.Room.Name</h1>
+        <div class="d-flex align-items-center">
+            <span class="status-indicator me-2 @statusClass"></span>
+            <span class="fs-4 fw-bold">@statusText</span>
+        </div>
+    </div>
 
-    <a asp-controller="Home" asp-action="Form" class="btn btn-primary">Book Now</a>
+    <div class="row mt-4">
+        <div class="col-12">
+            <img src="/imgs/@(Model.Room.Category.ToLower()).jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+    </div>
 
+    <div class="row mt-3">
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="/imgs/singlebed.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="/imgs/room.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="/imgs/pool.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="/imgs/twinbed.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <img src="/imgs/suite.jpg" class="img-fluid rounded" alt="Room Image">
+        </div>
+    </div>
+
+    <h3 class="fw-bold mt-5">Inclusions</h3>
+    <p class="fs-4 mt-4">@GetRoomInclusions(Model.Room)</p>
+
+    <h3 class="fw-bold mt-4">Price</h3>
+    <p class="fs-4">@Model.Room.Price.ToString("C") per night</p>
+
+    <h3 class="fw-bold mt-4">Check Availability</h3>
+    <div class="card p-4 mb-4">
+        <form asp-action="CheckAvailability" method="post">
+            <input type="hidden" name="roomId" value="@Model.Room.Id" />
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="mb-3">
+                        <label for="checkInDate" class="form-label">Check-in Date</label>
+                        <input type="date" id="checkInDate" name="checkInDate" class="form-control"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="mb-3">
+                        <label for="checkOutDate" class="form-label">Check-out Date</label>
+                        <input type="date" id="checkOutDate" name="checkOutDate" class="form-control"
+                               value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Check</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <h3 class="fw-bold mt-4">Check-in & Check-out</h3>
+    <ul class="fs-5">
+        <li>Check-in: From 3:00 PM (Early check-in subject to availability)</li>
+        <li>Check-out: Before 11:00 AM (Late check-out subject to availability)</li>
+    </ul>
+
+    <h3 class="fw-bold mt-4">Check-in Instructions</h3>
+    <p class="fs-5">
+        Guests will receive an email with check-in instructions on the day their booking is confirmed.
+        A valid ID or passport and a credit card or cash deposit are required at check-in for incidental charges.
+        For more details, please contact us using the information provided in the booking confirmation.
+    </p>
+
+    <h3 class="fw-bold mt-4">Children & Extra Beds</h3>
+    <p class="fs-5">
+        Children 12 years old and under can stay for free using existing bedding.<br>
+        <strong>Breakfast Policy for Kids:</strong><br>
+        Ages 0-5: Free breakfast<br>
+        Ages 6-12: Half-price breakfast<br>
+        <strong>Extra Bed Charge:</strong> ₱1,875 nett per night, inclusive of breakfast.
+    </p>
+
+    <h3 class="fw-bold mt-4">Room Availability Status</h3>
+    <p class="fs-5">
+        <span class="status-indicator bg-success"></span> Green: Lots of rooms available – You can book anytime!<br>
+        <span class="status-indicator bg-warning"></span> Orange: Limited rooms left – Hurry and book soon!<br>
+        <span class="status-indicator bg-danger"></span> Red: Fully booked – No rooms available for the selected date.
+    </p>
+
+    <div class="text-center mt-5">
+        <a href="#" class="btn btn-primary" onclick="document.getElementById('checkInDate').focus();">Book Now</a>
+    </div>
 </div>
+
+<hr class="divider" style="color: white; background-color: white;">
+
+<!-- Embedded CSS -->
+<style>
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+
+@functions {
+    private string GetRoomInclusions(HotelEase.Models.Room room)
+    {
+        string inclusions = "";
+
+        switch (room.BedType)
+        {
+            case "Single":
+                inclusions = "1 Single Bed, ";
+                break;
+            case "Double":
+                inclusions = "1 Double Bed, ";
+                break;
+            case "Twin":
+                inclusions = "2 Twin Beds, ";
+                break;
+            case "Queen":
+                inclusions = "1 Queen Bed, ";
+                break;
+            case "King":
+                inclusions = "1 King Bed, ";
+                break;
+            default:
+                inclusions = "Comfortable beds, ";
+                break;
+        }
+
+        inclusions += "Basic Toiletries, Air-conditioned, ";
+
+        switch (room.Category)
+        {
+            case "Standard":
+                inclusions += "TV and Free Wi-Fi";
+                break;
+            case "Deluxe":
+                inclusions += "Smart TV, Mini-Fridge, Free Wi-Fi, and Complimentary Breakfast";
+                break;
+            case "Suite":
+                inclusions += "Smart TV, Mini-Bar, Jacuzzi, Living Space, Free Wi-Fi, and Complimentary Breakfast & Dinner";
+                break;
+            default:
+                inclusions += "TV and Free Wi-Fi";
+                break;
+        }
+
+        return inclusions;
+    }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        // Set minimum check-out date based on check-in date
+        document.getElementById('checkInDate').addEventListener('change', function() {
+            var checkInDate = new Date(this.value);
+            var nextDay = new Date(checkInDate);
+            nextDay.setDate(checkInDate.getDate() + 1);
+
+            var checkOutInput = document.getElementById('checkOutDate');
+            checkOutInput.min = nextDay.toISOString().split('T')[0];
+
+            // If current check-out date is before new minimum, update it
+            if (new Date(checkOutInput.value) <= checkInDate) {
+                checkOutInput.value = nextDay.toISOString().split('T')[0];
+            }
+        });
+    </script>
+}

@@ -1,106 +1,91 @@
-﻿@{
+﻿@model Dictionary<string, List<HotelEase.Models.Room>>
+@{
     ViewData["Title"] = "Room Categories";
 }
-<section id="Standard-room">
-    <div class="container mt-5">
-        <h1 class="text-center">STANDARD ROOMS</h1>
 
-        <div class="row mt-4">
-            @foreach (var room in new[]
-            {
-            new { Title = "Standard Single Bed Room", Image = "/imgs/singlebed.jpg", Description = "with Air-conditioning, TV, Free Wi-Fi, good for 1 person", Price = "₱2,800" },
-            new { Title = "Standard Double Bed Room", Image = "/imgs/doublebed.jpg", Description = "with Air-conditioning, TV, Free Wi-Fi, good for 2 persons", Price = "₱4,500" },
-            new { Title = "Standard Family Room", Image = "/imgs/twinbed.jpg", Description = "with Air-conditioning, TV, Wi-Fi, good for 4 persons", Price = "₱5,000" }
-            })
-            {
-                <div class="col-12 col-md-6 col-lg-4 d-flex mb-2 justify-content-center">
-                    <div class="card shadow" style="max-width: 22rem; border-radius: 20px;">
-                        <img src="@room.Image" class="card-img-top img-fluid" alt="Room Image" style="border-radius: 20px 20px 0 0;">
-                        <div class="card-body">
-                            <h5 class="card-title text-start">@room.Title</h5>
-                            <p class="card-text text-start">@room.Description</p>
-                            <div class="d-flex justify-content-between">
-                                <span class="bg-tertiary fs-6">@room.Price <small>per night</small></span>
-                            </div>
-                            <div class="d-flex mt-3 justify-content-center">
-                                <a asp-controller="Room" asp-action="RList" class="btn btn-primary">View Room</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-</section>
+@foreach (var category in Model.Keys)
+{
+    <section id="@(category)-room">
+        <div class="container mt-5">
+            <h1 class="text-center">@category.ToUpper() ROOMS</h1>
 
-<section id="Deluxe-room">
-    <div class="container mt-5">
-        <h1 class="text-center">DELUXE ROOMS</h1>
-
-        <div class="row mt-4">
-            @foreach (var room in new[]
-            {
-            new { Title = "Deluxe Queen Bed Room", Image = "/imgs/queenbed.jpg", Description = "Free WiFi, Smart TV, Mini-Fridge, Complimentary Breakfast, good for 1 person", Price = "₱6,800" },
-            new { Title = "Deluxe King Bed Room", Image = "/imgs/twinbed.jpg", Description = "Free WiFi, Smart TV, Mini-Bar, Complimentary Breakfast, good for 2 persons", Price = "₱8,500" },
-            new { Title = "Deluxe Family Room", Image = "/imgs/doublebed.jpg", Description = "Free WiFi, Smart TV, Mini-Fridge, Complimentary Breakfast, good for 4 persons", Price = "₱7,500" }
-            })
-            {
-                <div class="col-12 col-md-6 col-lg-4 d-flex mb-2 justify-content-center">
-                    <div class="card shadow" style="max-width: 22rem; border-radius: 20px;">
-                        <img src="@room.Image" class="card-img-top img-fluid" alt="Room Image" style="border-radius: 20px 20px 0 0;">
-                        <div class="card-body">
-                            <h5 class="card-title text-start">@room.Title</h5>
-                            <p class="card-text text-start">@room.Description</p>
-                            <div class="d-flex justify-content-between">
-                                <span class="bg-tertiary fs-6">@room.Price <small>per night</small></span>
-                            </div>
-                            <div class="d-flex mt-3 justify-content-center">
-                                <a asp-controller="Room" asp-action="RList" class="btn btn-primary">View Room</a>
+            <div class="row mt-4">
+                @foreach (var room in Model[category])
+                {
+                    <div class="col-12 col-md-6 col-lg-4 d-flex mb-2 justify-content-center">
+                        <div class="card shadow" style="max-width: 22rem; border-radius: 20px;">
+                            <img src="/imgs/@(room.Category.ToLower()).jpg" class="card-img-top img-fluid" alt="Room Image" style="border-radius: 20px 20px 0 0;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title">@room.Name</h5>
+                                    <span class="status-indicator @GetAvailabilityStatusClass(room.Id)"></span>
+                                </div>
+                                <p class="card-text">@GetRoomDescription(room)</p>
+                                <div class="d-flex justify-content-between">
+                                    <span class="bg-tertiary fs-6">@room.Price.ToString("C") <small>per night</small></span>
+                                </div>
+                                <div class="d-flex mt-3 justify-content-center">
+                                    <a asp-controller="Room" asp-action="RDetails" asp-route-id="@room.Id" class="btn btn-primary">View Room</a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
-    </div>
-</section>
-
-<section id="Suite-room">
-    <div class="container mt-5">
-        <h1 class="text-center">SUITE ROOMS</h1>
-
-        <div class="row mt-4">
-            @foreach (var room in new[]
-            {
-            new { Title = "King-size Bed Suite", Image = "/imgs/singlebed.jpg", Description = "Free WiFi, Smart TV, Mini-Bar, Jacuzzi, Living Space, Complimentary Breakfast & Dinner, good for 2 persons", Price = "₱12,000" },
-            new { Title = "Presidential Suite", Image = "/imgs/twinbed.jpg", Description = "Private Living Room, Free WiFi, 55” Smart TV, Complimentary Full Board Meals, good for 2-3 persons", Price = "₱20,500" },
-            new { Title = "Family Suite", Image = "/imgs/doublebed.jpg", Description = "Free WiFi, Smart TV, Mini-Fridge, Living Area, Complimentary Breakfast, good for 4 persons", Price = "₱16,500" }
-            })
-            {
-                <div class="col-12 col-md-6 col-lg-4 d-flex mb-2 justify-content-center">
-                    <div class="card shadow" style="max-width: 22rem; border-radius: 20px;">
-                        <img src="@room.Image" class="card-img-top img-fluid" alt="Room Image" style="border-radius: 20px 20px 0 0;">
-                        <div class="card-body">
-                            <h5 class="card-title text-start">@room.Title</h5>
-                            <p class="card-text text-start">@room.Description</p>
-                            <div class="d-flex justify-content-between">
-                                <span class="bg-tertiary fs-6">@room.Price <small>per night</small></span>
-                            </div>
-                            <div class="d-flex mt-3 justify-content-center">
-                                <a asp-controller="Room" asp-action="RList" class="btn btn-primary">View Room</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-</section>
-
-<hr class="divider" style="color: white; background-color: white;"> <!-- Divider -->
-@section Scripts {
-  
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </section>
 }
+
+<hr class="divider" style="color: white; background-color: white;">
+
+@functions {
+    private string GetAvailabilityStatusClass(int roomId)
+    {
+        // In a real app, this would check the database
+        // For now, just return a default color
+        return "bg-success";
+    }
+
+    private string GetRoomDescription(HotelEase.Models.Room room)
+    {
+        // Generate a description based on room properties
+        string description = "";
+
+        switch (room.Category)
+        {
+            case "Standard":
+                description = "with Air-conditioning, TV, Free Wi-Fi";
+                break;
+            case "Deluxe":
+                description = "Free WiFi, Smart TV, Mini-Fridge, Complimentary Breakfast";
+                break;
+            case "Suite":
+                description = "Free WiFi, Smart TV, Mini-Bar, Jacuzzi, Living Space, Complimentary Breakfast & Dinner";
+                break;
+            default:
+                description = "Comfortable accommodations with essential amenities";
+                break;
+        }
+
+        switch (room.BedType)
+        {
+            case "Single":
+                description += ", good for 1 person";
+                break;
+            case "Double":
+            case "Twin":
+            case "Queen":
+                description += ", good for 2 persons";
+                break;
+            case "King":
+                description += ", good for 2-3 persons";
+                break;
+            default:
+                description += ", ideal for your stay";
+                break;
+        }
+
+        return description;
+    }
+}
+

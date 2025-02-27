@@ -12,11 +12,8 @@ namespace HotelEase.Models
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "Room Type is required.")]
-        public string RoomType { get; set; }
-
-        [Required(ErrorMessage = "Room Bed Type is required.")]
-        public string RoomBedType { get; set; }
+        [Required]
+        public int RoomId { get; set; }
 
         [Required(ErrorMessage = "Check-in Date is required.")]
         [DataType(DataType.Date)]
@@ -26,6 +23,12 @@ namespace HotelEase.Models
         [DataType(DataType.Date)]
         [DateAfter(nameof(CheckInDate), ErrorMessage = "Check-out date must be after check-in date.")]
         public DateTime CheckOutDate { get; set; }
+
+        // Additional properties for display purposes (not saved to database)
+        public string RoomName { get; set; }
+        public string RoomCategory { get; set; }
+        public string RoomBedType { get; set; }
+        public decimal RoomPrice { get; set; }
     }
 
     // Custom validation attribute to ensure check-out date is after check-in date
