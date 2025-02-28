@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<HotelEase.Models.Booking>
+@{
     ViewData["Title"] = "User Dashboard";
 }
 
@@ -16,42 +17,83 @@
     </ul>
 
     <div class="tab-content">
-        <!-- Booking Section -->
+        <!-- Booking Section - Uses consolidated table view like admin dashboard -->
         <section class="tab-pane fade show active" id="bookingTab">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Booking Status</h5>
+                    <h5 class="mb-0">Your Bookings</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="nav nav-pills mb-3">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="pill" href="#pending">Pending</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="pill" href="#ongoing">Ongoing</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="pill" href="#cancelled">Cancelled</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="pill" href="#completed">Completed</a>
-                        </li>
-                    </ul>
-
-                    <div class="tab-content">
-                        <section class="tab-pane fade show active" id="pending">
-                            <p>No pending bookings.</p>
-                        </section>
-                        <section class="tab-pane fade" id="ongoing">
-                            <p>No ongoing bookings.</p>
-                        </section>
-                        <section class="tab-pane fade" id="cancelled">
-                            <p>No cancelled bookings.</p>
-                        </section>
-                        <section class="tab-pane fade" id="completed">
-                            <p>No completed bookings.</p>
-                        </section>
-                    </div>
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Room</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Amount</th>
+                                        <th>Confirmation Code</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var booking in Model)
+                                    {
+                                        <tr>
+                                            <td>@booking.Id</td>
+                                            <td>@booking.Room?.Name</td>
+                                            <td>@booking.CheckInDate.ToShortDateString()</td>
+                                            <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                            <td>@booking.TotalPrice.ToString("C")</td>
+                                            <td>@booking.ConfirmationCode</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = booking.Status switch
+                                                    {
+                                                        BookingStatus.Pending => "bg-warning",
+                                                        BookingStatus.Confirmed => "bg-primary",
+                                                        BookingStatus.Cancelled => "bg-danger",
+                                                        BookingStatus.Completed => "bg-success",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@booking.Status</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Actions
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @if (booking.Status == BookingStatus.Pending)
+                                                        {
+                                                            <li><a class="dropdown-item" href="#" onclick="cancelBooking(@booking.Id)">Cancel</a></li>
+                                                        }
+                                                        <li><a class="dropdown-item" href="#" onclick="viewDetails(@booking.Id)">View Details</a></li>
+                                                        @if (booking.Status == BookingStatus.Confirmed)
+                                                        {
+                                                            <li><a class="dropdown-item" href="#" onclick="printConfirmation(@booking.Id)">Print Confirmation</a></li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>You don't have any bookings yet.</p>
+                        <div class="text-center mt-3">
+                            <a asp-controller="Room" asp-action="RCategory" class="btn btn-primary">Book a Room Now</a>
+                        </div>
+                    }
                 </div>
             </div>
         </section>
@@ -63,24 +105,66 @@
                     <h5 class="mb-0">Transaction History</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Booking ID</th>
-                                <th>Check-in Date</th>
-                                <th>Check-out Date</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="5" class="text-center">No transactions found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    @if (Model.Any(b => b.Status != BookingStatus.Pending))
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Booking ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var booking in Model.Where(b => b.Status != BookingStatus.Pending))
+                                {
+                                    <tr>
+                                        <td>TXN-@(booking.Id)@(new Random().Next(1000, 9999))</td>
+                                        <td>@booking.Id</td>
+                                        <td>@booking.BookingDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@booking.TotalPrice.ToString("C")</td>
+                                        <td>
+                                            @{
+                                                var paymentStatus = booking.Status == BookingStatus.Cancelled ? "Refunded" : "Paid";
+                                                var paymentClass = booking.Status == BookingStatus.Cancelled ? "bg-warning" : "bg-success";
+                                            }
+                                            <span class="badge @paymentClass">@paymentStatus</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p>No transactions found.</p>
+                    }
                 </div>
             </div>
         </section>
     </div>
 </div>
+
+<!-- Add JavaScript for booking actions -->
+<script>
+    function cancelBooking(bookingId) {
+        if (confirm('Are you sure you want to cancel this booking?')) {
+            // Here you would normally make an AJAX call to update the booking status
+            alert('Booking ' + bookingId + ' has been cancelled.');
+            window.location.reload();
+        }
+    }
+
+    function viewDetails(bookingId) {
+        // Here you would normally navigate to a details page or open a modal
+        alert('Viewing details for booking ' + bookingId);
+    }
+
+    function printConfirmation(bookingId) {
+        // Here you would normally generate a printable confirmation
+        alert('Printing confirmation for booking ' + bookingId);
+        window.print();
+    }
+</script>

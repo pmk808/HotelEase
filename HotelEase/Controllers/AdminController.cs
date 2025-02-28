@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace HotelEase.Controllers
 {
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -46,11 +47,28 @@ namespace HotelEase.Controllers
                 availabilityData[inventory.RoomId] = inventory.AvailableRooms;
             }
 
+            // For rooms with no inventory record today, use total rooms as available
+            foreach (var room in rooms)
+            {
+                if (!availabilityData.ContainsKey(room.Id))
+                {
+                    // Get the most recent inventory for this room
+                    var lastInventory = await _context.RoomInventories
+                        .Where(ri => ri.RoomId == room.Id)
+                        .OrderByDescending(ri => ri.Date)
+                        .FirstOrDefaultAsync();
+
+                    // Use last inventory or default to 10
+                    availabilityData[room.Id] = lastInventory?.TotalRooms ?? 10;
+                }
+            }
+
             // Pass availability data to the view
             ViewBag.AvailabilityData = availabilityData;
 
             return View(rooms);
         }
+
         // GET: Admin/CreateRoom
         public IActionResult CreateRoom()
         {
@@ -62,10 +80,32 @@ namespace HotelEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateRoom(Room room)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(room);
                 await _context.SaveChangesAsync();
+
+                // After creating a new room, initialize its inventory for the next 30 days
+                var today = DateTime.Today;
+                for (int i = 0; i < 30; i++)
+                {
+                    var date = today.AddDays(i);
+                    _context.RoomInventories.Add(new RoomInventory
+                    {
+                        RoomId = room.Id,
+                        Date = date,
+                        TotalRooms = 10,
+                        AvailableRooms = 10
+                    });
+                }
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(RoomInventory));
             }
             return View(room);
@@ -74,20 +114,30 @@ namespace HotelEase.Controllers
         // GET: Admin/UpdateInventory/5
         public async Task<IActionResult> UpdateInventory(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var room = await _context.Rooms.FindAsync(id);
             if (room == null)
             {
                 return NotFound();
             }
 
-            // Create a view model for updating inventory
+            // Find the most recent inventory for this room or create a default one
+            var today = DateTime.Today;
+            var inventory = await _context.RoomInventories
+                .FirstOrDefaultAsync(ri => ri.RoomId == id && ri.Date.Date == today.Date);
+
             var viewModel = new RoomInventoryViewModel
             {
                 RoomId = room.Id,
                 RoomName = room.Name,
-                TotalRooms = 10, // Default value - you might have a different logic
-                AvailableRooms = 10, // Default value
-                Date = DateTime.Today
+                TotalRooms = inventory?.TotalRooms ?? 10,
+                AvailableRooms = inventory?.AvailableRooms ?? 10,
+                Date = today
             };
 
             return View(viewModel);
@@ -98,8 +148,21 @@ namespace HotelEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateInventory(RoomInventoryViewModel model)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (ModelState.IsValid)
             {
+                // Validate that available rooms don't exceed total rooms
+                if (model.AvailableRooms > model.TotalRooms)
+                {
+                    ModelState.AddModelError("AvailableRooms", "Available rooms cannot exceed total rooms.");
+                    return View(model);
+                }
+
                 // Check if an inventory entry exists for this room and date
                 var existingInventory = await _context.RoomInventories
                     .FirstOrDefaultAsync(ri => ri.RoomId == model.RoomId && ri.Date.Date == model.Date.Date);
@@ -124,9 +187,58 @@ namespace HotelEase.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Show success message
+                TempData["SuccessMessage"] = "Room inventory updated successfully.";
+
                 return RedirectToAction(nameof(RoomInventory));
             }
             return View(model);
+        }
+
+        // GET: Admin/ViewInventoryCalendar/5
+        public async Task<IActionResult> ViewInventoryCalendar(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound();
+            }
+
+            // Get 30-day inventory for this room
+            var today = DateTime.Today;
+            var endDate = today.AddDays(30);
+
+            var inventories = await _context.RoomInventories
+                .Where(ri => ri.RoomId == id && ri.Date >= today && ri.Date < endDate)
+                .OrderBy(ri => ri.Date)
+                .ToListAsync();
+
+            // Create view model with room details and inventory data
+            var viewModel = new RoomInventoryCalendarViewModel
+            {
+                Room = room,
+                Inventories = inventories,
+                StartDate = today,
+                EndDate = endDate
+            };
+
+            return View(viewModel);
+        }
+
+        // View Model for the inventory calendar
+        public class RoomInventoryCalendarViewModel
+        {
+            public Room Room { get; set; }
+            public List<RoomInventory> Inventories { get; set; }
+            public DateTime StartDate { get; set; }
+            public DateTime EndDate { get; set; }
         }
 
         // View Model for updating room inventory
@@ -142,6 +254,12 @@ namespace HotelEase.Controllers
         // GET: Admin/EditRoom/5
         public async Task<IActionResult> EditRoom(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var room = await _context.Rooms.FindAsync(id);
             if (room == null)
             {
@@ -156,6 +274,12 @@ namespace HotelEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditRoom(int id, Room room)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id != room.Id)
             {
                 return NotFound();
@@ -167,6 +291,9 @@ namespace HotelEase.Controllers
                 {
                     _context.Update(room);
                     await _context.SaveChangesAsync();
+
+                    // Success message
+                    TempData["SuccessMessage"] = "Room updated successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -187,10 +314,28 @@ namespace HotelEase.Controllers
         // GET: Admin/DeleteRoom/5
         public async Task<IActionResult> DeleteRoom(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             var room = await _context.Rooms.FindAsync(id);
             if (room == null)
             {
                 return NotFound();
+            }
+
+            // Check if there are any active bookings for this room
+            var hasActiveBookings = await _context.Bookings
+                .AnyAsync(b => b.RoomId == id &&
+                       (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed) &&
+                       b.CheckOutDate > DateTime.Today);
+
+            if (hasActiveBookings)
+            {
+                TempData["ErrorMessage"] = "Cannot delete room with active bookings.";
+                return RedirectToAction(nameof(RoomInventory));
             }
 
             return View(room);
@@ -201,12 +346,43 @@ namespace HotelEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRoomConfirmed(int id)
         {
-            var room = await _context.Rooms.FindAsync(id);
-            if (room != null)
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !user.IsAdmin)
             {
-                _context.Rooms.Remove(room);
-                await _context.SaveChangesAsync();
+                return RedirectToAction("Index", "Home");
             }
+
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound();
+            }
+
+            // Check if there are any active bookings for this room
+            var hasActiveBookings = await _context.Bookings
+                .AnyAsync(b => b.RoomId == id &&
+                       (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed) &&
+                       b.CheckOutDate > DateTime.Today);
+
+            if (hasActiveBookings)
+            {
+                TempData["ErrorMessage"] = "Cannot delete room with active bookings.";
+                return RedirectToAction(nameof(RoomInventory));
+            }
+
+            // Delete all inventory records for this room
+            var inventories = await _context.RoomInventories
+                .Where(ri => ri.RoomId == id)
+                .ToListAsync();
+
+            _context.RoomInventories.RemoveRange(inventories);
+
+            // Delete the room
+            _context.Rooms.Remove(room);
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Room deleted successfully.";
 
             return RedirectToAction(nameof(RoomInventory));
         }
@@ -214,85 +390,6 @@ namespace HotelEase.Controllers
         private bool RoomExists(int id)
         {
             return _context.Rooms.Any(e => e.Id == id);
-        }
-
-        // GET: Admin/GetRoomAvailability
-        public async Task<IActionResult> GetRoomAvailability(DateTime date)
-        {
-            // Default to today if no date provided
-            if (date == default)
-            {
-                date = DateTime.Today;
-            }
-
-            // Get all rooms
-            var rooms = await _context.Rooms.ToListAsync();
-
-            // Get availability data for the specified date
-            var inventoryData = await _context.RoomInventories
-                .Where(ri => ri.Date.Date == date.Date)
-                .ToListAsync();
-
-            // Combine room and inventory data
-            var availabilityData = new List<object>();
-
-            foreach (var room in rooms)
-            {
-                var inventory = inventoryData.FirstOrDefault(ri => ri.RoomId == room.Id);
-
-                // If no inventory record exists for this room/date, create default values
-                int totalRooms = inventory?.TotalRooms ?? 10;
-                int availableRooms = inventory?.AvailableRooms ?? 10;
-
-                availabilityData.Add(new
-                {
-                    roomId = room.Id,
-                    roomName = room.Name,
-                    category = room.Category,
-                    bedType = room.BedType,
-                    totalRooms = totalRooms,
-                    availableRooms = availableRooms,
-                    date = date.ToString("yyyy-MM-dd")
-                });
-            }
-
-            return Json(availabilityData);
-        }
-
-        // GET: Admin/UpdateRoomInventory
-        public async Task<IActionResult> UpdateRoomInventory(int roomId, DateTime date)
-        {
-            var room = await _context.Rooms.FindAsync(roomId);
-            if (room == null)
-            {
-                return NotFound();
-            }
-
-            // Find existing inventory or create a new one
-            var inventory = await _context.RoomInventories
-                .FirstOrDefaultAsync(ri => ri.RoomId == roomId && ri.Date.Date == date.Date);
-
-            if (inventory == null)
-            {
-                inventory = new RoomInventory
-                {
-                    RoomId = roomId,
-                    Date = date,
-                    TotalRooms = 10,
-                    AvailableRooms = 10
-                };
-            }
-
-            var viewModel = new RoomInventoryViewModel
-            {
-                RoomId = roomId,
-                RoomName = room.Name,
-                Date = date,
-                TotalRooms = inventory.TotalRooms,
-                AvailableRooms = inventory.AvailableRooms
-            };
-
-            return View(viewModel);
         }
     }
 }

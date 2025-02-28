@@ -1,0 +1,103 @@
+﻿@model HotelEase.Controllers.AdminController.RoomInventoryCalendarViewModel
+@{
+    ViewData["Title"] = "Room Inventory Calendar";
+
+    // Helper function to get CSS class based on availability status
+    string GetAvailabilityClass(RoomInventory inventory)
+    {
+        if (inventory == null) return "bg-light";
+
+        return inventory.Status switch
+        {
+            AvailabilityStatus.Available => "bg-success text-white",
+            AvailabilityStatus.LimitedAvailability => "bg-warning",
+            AvailabilityStatus.NotAvailable => "bg-danger text-white",
+            _ => "bg-light"
+        };
+    }
+
+    // Helper function to get inventory for a specific date
+    RoomInventory GetInventoryForDate(DateTime date)
+    {
+        return Model.Inventories.FirstOrDefault(inv => inv.Date.Date == date.Date);
+    }
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Inventory Calendar: @Model.Room.Name</h2>
+        <a asp-action="RoomInventory" class="btn btn-secondary">Back to Room List</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Room Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Room:</strong> @Model.Room.Name
+                </div>
+                <div class="col-md-3">
+                    <strong>Category:</strong> @Model.Room.Category
+                </div>
+                <div class="col-md-3">
+                    <strong>Bed Type:</strong> @Model.Room.BedType
+                </div>
+                <div class="col-md-3">
+                    <strong>Price:</strong> @Model.Room.Price.ToString("C")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">30-Day Availability</h5>
+                <div>
+                    <span class="badge bg-success me-2">Available</span>
+                    <span class="badge bg-warning me-2">Limited</span>
+                    <span class="badge bg-danger">Unavailable</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="width: 150px;">Date</th>
+                            <th style="width: 120px;">Day</th>
+                            <th>Total Rooms</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var date = Model.StartDate; date < Model.EndDate; date = date.AddDays(1))
+                        {
+                            var inventory = GetInventoryForDate(date);
+                            var availabilityClass = GetAvailabilityClass(inventory);
+                            var availabilityStatus = inventory?.Status.ToString() ?? "Unknown";
+
+                            <tr class="@(date.Date == DateTime.Today.Date ? "table-active" : "")">
+                                <td>@date.ToString("yyyy-MM-dd")</td>
+                                <td>@date.ToString("dddd")</td>
+                                <td>@(inventory?.TotalRooms ?? 10)</td>
+                                <td>@(inventory?.AvailableRooms ?? 10)</td>
+                                <td><span class="badge @availabilityClass">@availabilityStatus</span></td>
+                                <td>
+                                    <a asp-action="UpdateInventory" asp-route-id="@Model.Room.Id" asp-route-date="@date.ToString("yyyy-MM-dd")" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Update
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
