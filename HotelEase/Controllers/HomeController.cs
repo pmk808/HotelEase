@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HotelEase.Data;
+using Stripe;
+using Microsoft.Extensions.Options;
 
 namespace HotelEase.Controllers
 {
@@ -12,15 +14,18 @@ namespace HotelEase.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IOptions<StripeSettings> _stripeSettings;
 
         public HomeController(
-            ILogger<HomeController> logger,
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+        ILogger<HomeController> logger,
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        IOptions<StripeSettings> stripeSettings)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
+            _stripeSettings = stripeSettings;
         }
 
         public IActionResult Index()
@@ -180,42 +185,75 @@ namespace HotelEase.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Generate a confirmation code
-                booking.ConfirmationCode = GenerateConfirmationCode();
-                booking.Status = BookingStatus.Confirmed;
-
-                // Update room inventory for each day of the booking
-                for (DateTime date = booking.CheckInDate; date < booking.CheckOutDate; date = date.AddDays(1))
+                try
                 {
-                    // Try to find existing inventory
-                    var inventory = await _context.RoomInventories
-                        .FirstOrDefaultAsync(ri => ri.RoomId == booking.RoomId && ri.Date.Date == date.Date);
-
-                    if (inventory != null)
+                    // Create a Stripe PaymentIntent
+                    var options = new PaymentIntentCreateOptions
                     {
-                        // Ensure we don't go below zero
-                        inventory.AvailableRooms = Math.Max(0, inventory.AvailableRooms - 1);
-                    }
-                    else
-                    {
-                        // Create new inventory record with default values
-                        _context.RoomInventories.Add(new RoomInventory
-                        {
-                            RoomId = booking.RoomId,
-                            Date = date,
-                            TotalRooms = 10,
-                            AvailableRooms = 9  // Start with 9 as 1 is being booked
-                        });
-                    }
+                        Amount = (long)(booking.TotalPrice * 100), // Stripe uses cents
+                        Currency = "usd",
+                        Description = $"HotelEase Booking #{booking.Id}",
+                        PaymentMethodTypes = new List<string> { "card" },
+                        Metadata = new Dictionary<string, string>
+                {
+                    { "BookingId", booking.Id.ToString() },
+                    { "RoomId", booking.RoomId.ToString() },
+                    { "CheckInDate", booking.CheckInDate.ToString("yyyy-MM-dd") },
+                    { "CheckOutDate", booking.CheckOutDate.ToString("yyyy-MM-dd") }
                 }
+                    };
 
-                await _context.SaveChangesAsync();
+                    var service = new PaymentIntentService();
+                    var paymentIntent = await service.CreateAsync(options);
 
-                // Store confirmation code for the confirmation page
-                TempData["ConfirmationCode"] = booking.ConfirmationCode;
-                TempData["PaymentSuccess"] = "Payment processed successfully!";
+                    // Generate a confirmation code
+                    booking.ConfirmationCode = GenerateConfirmationCode();
+                    booking.Status = BookingStatus.Confirmed;
 
-                return RedirectToAction("ConfirmPay");
+                    // Update room inventory for each day of the booking
+                    for (DateTime date = booking.CheckInDate; date < booking.CheckOutDate; date = date.AddDays(1))
+                    {
+                        // Try to find existing inventory
+                        var inventory = await _context.RoomInventories
+                            .FirstOrDefaultAsync(ri => ri.RoomId == booking.RoomId && ri.Date.Date == date.Date);
+
+                        if (inventory != null)
+                        {
+                            // Ensure we don't go below zero
+                            inventory.AvailableRooms = Math.Max(0, inventory.AvailableRooms - 1);
+                        }
+                        else
+                        {
+                            // Create new inventory record with default values
+                            _context.RoomInventories.Add(new RoomInventory
+                            {
+                                RoomId = booking.RoomId,
+                                Date = date,
+                                TotalRooms = 10,
+                                AvailableRooms = 9  // Start with 9 as 1 is being booked
+                            });
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Store confirmation code for the confirmation page
+                    TempData["ConfirmationCode"] = booking.ConfirmationCode;
+                    TempData["PaymentIntent"] = paymentIntent.ClientSecret;  // Used by Stripe.js
+                    TempData["PaymentSuccess"] = "Payment processed successfully!";
+
+                    return RedirectToAction("ConfirmPay");
+                }
+                catch (Stripe.StripeException e)
+                {
+                    ModelState.AddModelError(string.Empty, $"Payment error: {e.Message}");
+                    return View("Payment", model);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError(string.Empty, $"An error occurred: {e.Message}");
+                    return View("Payment", model);
+                }
             }
 
             return View("Payment", model);

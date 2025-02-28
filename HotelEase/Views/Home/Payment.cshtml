@@ -1,76 +1,22 @@
 ﻿@model HotelEase.Models.Payment
+@inject Microsoft.Extensions.Options.IOptions<HotelEase.Models.StripeSettings> StripeSettings
 @{
-    ViewData["Title"] = "ConfirmPayment";
-    // Simulating transaction status from backend
-    bool isBookingCompleted = true;   // Step 1 - Booking done
-    bool isPaymentCompleted = false;   // Step 2 - Payment done
-    bool isConfirmed = false;         // Step 3 - done
+    ViewData["Title"] = "Payment";
+    var stripePublishableKey = StripeSettings.Value.PublishableKey;
+    // Other view data
 }
 
-
-
-<!-- Add Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-<style>
-    .step-circle {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        border: 2px solid #fff; /* White border for visibility */
-    }
-</style>
-
-
-<section id="status">
-    <!-- Transaction Status Steps -->
-    <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-10 d-flex justify-content-between align-items-center">
-                <!-- Step 1: Booking -->
-                <div class="text-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
-                    @(isBookingCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
-                        <i class="@(isBookingCompleted ? "fas fa-check" : "fas fa-hourglass-half")"></i>
-                    </div>
-                    <p class="mt-2">Booking</p>
-                </div>
-
-                <div class="flex-grow-1 border-top border-3 mx-2"></div>
-
-                <!-- Step 2: Payment -->
-                <div class="text-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
-                    @(isPaymentCompleted ? "bg-dark text-white" : "bg-secondary text-white")">
-                        <i class="@(isPaymentCompleted ? "fas fa-check" : "fas fa-hourglass-half")"></i>
-                    </div>
-                    <p class="mt-2">Payment</p>
-                </div>
-
-                <div class="flex-grow-1 border-top border-3 mx-2"></div>
-
-                <!-- Step 3: Confirm -->
-                <div class="text-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center step-circle
-                    @(isConfirmed ? "bg-dark text-white" : "bg-secondary text-white")">
-                        <i class="@(isConfirmed ? "fas fa-check" : "fas fa-hourglass-half")"></i>
-                    </div>
-                    <p class="mt-2">Confirm</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- Add Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
 
 <section id="payment-form">
     <div class="container mt-5">
         <div class="card p-5" style="background-color: #223843; color: white;">
             <h2 class="text-center">Payment Form</h2>
-            <form asp-action="ProcessPayment" method="post" class="needs-validation" novalidate>
+            <form id="payment-form-element" asp-action="ProcessPayment" method="post">
+                <!-- Your existing form fields -->
+                <input type="hidden" asp-for="BookingId" />
+
                 <div class="row">
                     <!-- Payment Method -->
                     <div class="col-md-12 mb-3">
@@ -87,15 +33,17 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <!-- Card Number (only for Credit/Debit) -->
-                    <div class="col-md-12 mb-3" id="cardNumberField" style="display: none;">
-                        <label asp-for="CardNumber" class="form-label">Card Number</label>
-                        <input asp-for="CardNumber" type="text" class="form-control" placeholder="Enter card number" pattern="\d{13,16}" />
-                        <span asp-validation-for="CardNumber" class="text-danger"></span>
+                <!-- Card Element for Credit/Debit card -->
+                <div id="card-element-container" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Card Information</label>
+                        <div id="card-element" class="form-control" style="height: 40px; padding: 10px;"></div>
+                        <div id="card-errors" class="text-danger mt-2"></div>
                     </div>
+                </div>
 
-                    <!-- Phone Number / Email (for PayPal, GCash, Maya) -->
+                <!-- Phone/Email for other payment methods -->
+                <div class="row">
                     <div class="col-md-12 mb-3" id="phoneNumberField" style="display: none;">
                         <label asp-for="PhoneNumber" class="form-label">Phone Number / Email</label>
                         <input asp-for="PhoneNumber" type="text" class="form-control" placeholder="Enter phone number or email" />
@@ -107,13 +55,13 @@
                     <!-- Amount Due -->
                     <div class="col-md-12 mb-3">
                         <label asp-for="AmountDue" class="form-label">Amount Due</label>
-                        <input asp-for="AmountDue" type="text" class="form-control" readonly value="100.00" /> <!-- Dynamic value from backend -->
+                        <input asp-for="AmountDue" type="text" class="form-control" readonly />
                         <span asp-validation-for="AmountDue" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="text-center mt-3">
-                    <a asp-controller="Home" asp-action="ConfirmPay" class="btn btn-success">Confirm Booking</a>
+                    <button type="submit" class="btn btn-success">Process Payment</button>
                 </div>
             </form>
         </div>
@@ -121,20 +69,82 @@
 </section>
 
 <script>
-    document.getElementById("paymentMethod").addEventListener("change", function () {
-        let selectedMethod = this.value;
-        let cardField = document.getElementById("cardNumberField");
-        let phoneField = document.getElementById("phoneNumberField");
+    // Initialize Stripe
+    var stripe = Stripe('@stripePublishableKey');
+    var elements = stripe.elements();
 
-        if (selectedMethod === "Credit Card" || selectedMethod === "Debit Card") {
-            cardField.style.display = "block";
-            phoneField.style.display = "none";
-        } else if (selectedMethod === "PayPal" || selectedMethod === "GCash" || selectedMethod === "Maya") {
-            cardField.style.display = "none";
-            phoneField.style.display = "block";
+    // Create card element
+    var style = {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+
+    var card = elements.create('card', {style: style});
+
+    // Toggle payment method fields
+    document.getElementById('paymentMethod').addEventListener('change', function() {
+        var method = this.value;
+        var cardContainer = document.getElementById('card-element-container');
+        var phoneField = document.getElementById('phoneNumberField');
+
+        if (method === 'Credit Card' || method === 'Debit Card') {
+            cardContainer.style.display = 'block';
+            phoneField.style.display = 'none';
+
+            // Only mount the card when it's visible to avoid errors
+            card.mount('#card-element');
+        } else if (method === 'PayPal' || method === 'GCash' || method === 'Maya') {
+            cardContainer.style.display = 'none';
+            phoneField.style.display = 'block';
+
+            // Unmount when not using card to avoid validation errors
+            card.unmount();
         } else {
-            cardField.style.display = "none";
-            phoneField.style.display = "none";
+            cardContainer.style.display = 'none';
+            phoneField.style.display = 'none';
+
+            // Unmount when not using card
+            card.unmount();
+        }
+    });
+
+    // Handle form submission
+    var form = document.getElementById('payment-form-element');
+    form.addEventListener('submit', function(event) {
+        var method = document.getElementById('paymentMethod').value;
+
+        // Only validate card for credit/debit card payments
+        if (method === 'Credit Card' || method === 'Debit Card') {
+            event.preventDefault();
+
+            stripe.createToken(card).then(function(result) {
+                if (result.error) {
+                    // Display error
+                    var errorElement = document.getElementById('card-errors');
+                    errorElement.textContent = result.error.message;
+                } else {
+                    // Send token to your server
+                    var hiddenInput = document.createElement('input');
+                    hiddenInput.setAttribute('type', 'hidden');
+                    hiddenInput.setAttribute('name', 'stripeToken');
+                    hiddenInput.setAttribute('value', result.token.id);
+                    form.appendChild(hiddenInput);
+
+                    // Submit form
+                    form.submit();
+                }
+            });
         }
     });
 </script>

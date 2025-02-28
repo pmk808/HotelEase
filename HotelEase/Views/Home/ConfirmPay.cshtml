@@ -1,7 +1,7 @@
 ﻿@model HotelEase.Models.ConfirmPayment
 
 @{
-    ViewData["Title"] = "ConfirmPayment";
+    ViewData["Title"] = "Payment Confirmation";
     // Simulating transaction status from backend
     bool isBookingCompleted = true;   // Step 1 - Booking done
     bool isPaymentCompleted = true;   // Step 2 - Payment done
@@ -70,24 +70,26 @@
 <section id="confirm-payment">
     <div class="container mt-5">
         <div class="card p-5" style="background-color: #223843; color: white;">
-            <h2 class="text-center">Confirm Payment</h2>
+            <div class="text-center mb-4">
+                <i class="fas fa-check-circle text-success" style="font-size: 64px;"></i>
+                <h2 class="mt-3">Payment Successful!</h2>
+                <p class="lead">Your booking has been confirmed with confirmation code:</p>
+                <h3 class="mt-2">@Model.ConfirmationCode</h3>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+                <p><strong>Please keep this confirmation code safe.</strong> You'll need it for check-in or to make any changes to your booking.</p>
+            </div>
+
             <form asp-action="VerifyPayment" method="post" class="needs-validation" novalidate>
-                <div class="row">
-                    <!-- Confirmation Code -->
-                    <div class="col-md-12 mb-3">
-                        <label asp-for="ConfirmationCode" class="form-label">Enter Confirmation Code</label>
-                        <input asp-for="ConfirmationCode" class="form-control" placeholder="Enter the code" required />
-                        <span asp-validation-for="ConfirmationCode" class="text-danger"></span>
-                    </div>
-                </div>
+                <input type="hidden" asp-for="ConfirmationCode" />
                 <div class="text-center mt-3">
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-success">Submit</a>
+                    <button type="submit" class="btn btn-success">Complete Booking</button>
                 </div>
             </form>
         </div>
     </div>
 </section>
-
 
 
 @section Scripts {
