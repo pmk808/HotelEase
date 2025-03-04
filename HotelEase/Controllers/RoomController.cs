@@ -83,6 +83,19 @@ namespace HotelEase.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckAvailability(int roomId, DateTime checkInDate, DateTime checkOutDate)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                // Store the details in TempData
+                TempData["PendingRoomId"] = roomId;
+                TempData["PendingCheckInDate"] = checkInDate.ToString("yyyy-MM-dd");
+                TempData["PendingCheckOutDate"] = checkOutDate.ToString("yyyy-MM-dd");
+
+                // Redirect to login page
+                return RedirectToAction("RedirectToLogin", "Home", new
+                {
+                    returnUrl = Url.Action("ResumeBookingAfterLogin", "Home")
+                });
+            }
             // Check if selected dates are valid
             if (checkInDate < DateTime.Today)
             {

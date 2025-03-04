@@ -55,6 +55,8 @@ namespace HotelEase.Areas.Identity.Pages.Account
         [TempData]
         public string ErrorMessage { get; set; }
 
+        public string LoginMessage { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -87,6 +89,7 @@ namespace HotelEase.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
+            LoginMessage = TempData["LoginMessage"] as string;
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
@@ -116,6 +119,26 @@ namespace HotelEase.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    // Check if we have pending booking details
+                    if (TempData.ContainsKey("PendingRoomId") &&
+                        TempData.ContainsKey("PendingCheckInDate") &&
+                        TempData.ContainsKey("PendingCheckOutDate"))
+                    {
+                        // Keep the TempData for the next request
+                        TempData.Keep("PendingRoomId");
+                        TempData.Keep("PendingCheckInDate");
+                        TempData.Keep("PendingCheckOutDate");
+
+                        // Redirect to a specialized action that will handle resuming the booking
+                        return RedirectToAction("Form", "Home", new
+                        {
+                            roomId = TempData["PendingRoomId"],
+                            checkInDate = TempData["PendingCheckInDate"],
+                            checkOutDate = TempData["PendingCheckOutDate"]
+                        });
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

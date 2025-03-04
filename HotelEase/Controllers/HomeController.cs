@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using HotelEase.Data;
 using Stripe;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace HotelEase.Controllers
 {
@@ -46,6 +47,18 @@ namespace HotelEase.Controllers
         [HttpGet]
         public async Task<IActionResult> Form(int roomId, DateTime checkInDate, DateTime checkOutDate)
         {
+            // Check if user is logged in
+            if (!User.Identity.IsAuthenticated)
+            {
+                // Store the booking details in TempData so we can retrieve them after login
+                TempData["PendingRoomId"] = roomId;
+                TempData["PendingCheckInDate"] = checkInDate.ToString("yyyy-MM-dd");
+                TempData["PendingCheckOutDate"] = checkOutDate.ToString("yyyy-MM-dd");
+
+                // Redirect to login page with a return URL to this action
+                return RedirectToAction("RedirectToLogin", new { returnUrl = Url.Action("ResumeBookingAfterLogin") });
+            }
+
             var room = await _context.Rooms.FindAsync(roomId);
             if (room == null)
             {
@@ -64,23 +77,64 @@ namespace HotelEase.Controllers
                 CheckOutDate = checkOutDate
             };
 
-            // If user is logged in, pre-fill their information
-            if (User.Identity.IsAuthenticated)
+            // Pre-fill with user information
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    model.FullName = user.FullName;
-                    model.Email = user.Email ?? string.Empty;
-                }
+                model.FullName = user.FullName;
+                model.Email = user.Email ?? string.Empty;
             }
 
             return View(model);
         }
 
+        public IActionResult RedirectToLogin(string returnUrl)
+        {
+            // Store a message to be displayed after login
+            TempData["LoginMessage"] = "Please log in to complete your booking.";
+
+            returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action("Index", "Home");
+
+            // Redirect to login page with a return URL
+            return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl });
+        }
+
+        public async Task<IActionResult> ResumeFormSubmissionAfterLogin()
+        {
+            // Check if we have pending form data
+            if (TempData.ContainsKey("PendingFormData"))
+            {
+                try
+                {
+                    var formDataJson = (string)TempData["PendingFormData"];
+                    var model = JsonSerializer.Deserialize<FormModel>(formDataJson);
+
+                    // Resubmit the form
+                    return await SubmitForm(model);
+                }
+                catch
+                {
+                    // If there's an error deserializing, redirect to room categories
+                    return RedirectToAction("RCategory", "Room");
+                }
+            }
+
+            // If no pending form data, go to room categories
+            return RedirectToAction("RCategory", "Room");
+        }
+
         [HttpPost]
         public async Task<IActionResult> SubmitForm(FormModel model)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                // Store form data in TempData
+                TempData["PendingFormData"] = JsonSerializer.Serialize(model);
+
+                // Redirect to login
+                return RedirectToAction("RedirectToLogin", new { returnUrl = Url.Action("ResumeFormSubmissionAfterLogin") });
+            }
+
             if (ModelState.IsValid)
             {
                 // Get room details
@@ -168,6 +222,8 @@ namespace HotelEase.Controllers
 
             return View("Form", model);
         }
+
+
 
 
         // Show the Payment Page
