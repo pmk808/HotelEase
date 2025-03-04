@@ -1,8 +1,6 @@
-﻿<!-- Views/Home/Form.cshtml - Modified version -->
-@model HotelEase.Models.FormModel
-
+﻿@model HotelEase.Models.FormModel
 @{
-    ViewData["Title"] = "Booking";
+    ViewData["Title"] = ViewBag.IsEditing == true ? "Edit Booking" : "Booking";
     bool isBookingCompleted = false;   // Step 1 - Booking not made
     bool isPaymentCompleted = false;   // Step 2 - Payment not made
     bool isConfirmed = false;         // Step 3 - Payment not confirmed
@@ -67,41 +65,131 @@
 <section id="booking-form">
     <div class="container mt-5">
         <div class="card p-5" style="background-color: #223843; color: white;">
-            <h2 class="text-center">Hotel Booking Form</h2>
-
-            <div class="mb-4 p-3 bg-light text-dark rounded">
-                <h5>Booking Details</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Room:</strong> @Model.RoomName</p>
-                        <p><strong>Category:</strong> @Model.RoomCategory</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Bed Type:</strong> @Model.RoomBedType</p>
-                        <p><strong>Price per Night:</strong> @Model.RoomPrice.ToString("C")</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Check-in Date:</strong> @Model.CheckInDate.ToString("dddd, MMMM d, yyyy")</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Check-out Date:</strong> @Model.CheckOutDate.ToString("dddd, MMMM d, yyyy")</p>
-                    </div>
-                </div>
-                <p><strong>Total Nights:</strong> @((Model.CheckOutDate - Model.CheckInDate).TotalDays)</p>
-                <p><strong>Total Price:</strong> @((Model.RoomPrice * (decimal)(Model.CheckOutDate - Model.CheckInDate).TotalDays).ToString("C"))</p>
-            </div>
+            <h2 class="text-center">@(ViewBag.IsEditing == true ? "Edit Booking" : "Hotel Booking Form")</h2>
 
             <form asp-action="SubmitForm" method="post" class="needs-validation" novalidate>
                 <input type="hidden" asp-for="BookingId" />
-                <input type="hidden" asp-for="RoomId" />
-                <input type="hidden" asp-for="RoomName" />
-                <input type="hidden" asp-for="RoomCategory" />
-                <input type="hidden" asp-for="RoomBedType" />
-                <input type="hidden" asp-for="RoomPrice" />
-                <input type="hidden" asp-for="CheckInDate" />
-                <input type="hidden" asp-for="CheckOutDate" />
+
+                <!-- Room Selection -->
+                <div class="mb-4">
+                    <h5>Room Selection</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="roomCategory" class="form-label">Room Category</label>
+                            <select id="roomCategory" class="form-control" onchange="updateRoomSelection()">
+                                <option value="">Select Category</option>
+                                @if (Model.RoomCategory == "Standard")
+                                {
+                                    <option value="Standard" selected>Standard</option>
+                                }
+                                else
+                                {
+                                    <option value="Standard">Standard</option>
+                                }
+
+                                @if (Model.RoomCategory == "Deluxe")
+                                {
+                                    <option value="Deluxe" selected>Deluxe</option>
+                                }
+                                else
+                                {
+                                    <option value="Deluxe">Deluxe</option>
+                                }
+
+                                @if (Model.RoomCategory == "Suite")
+                                {
+                                    <option value="Suite" selected>Suite</option>
+                                }
+                                else
+                                {
+                                    <option value="Suite">Suite</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="bedType" class="form-label">Bed Type</label>
+                            <select id="bedType" class="form-control" onchange="updateRoomSelection()">
+                                <option value="">Select Bed Type</option>
+                                @if (Model.RoomBedType == "Single")
+                                {
+                                    <option value="Single" selected>Single</option>
+                                }
+                                else
+                                {
+                                    <option value="Single">Single</option>
+                                }
+
+                                @if (Model.RoomBedType == "Twin")
+                                {
+                                    <option value="Twin" selected>Twin</option>
+                                }
+                                else
+                                {
+                                    <option value="Twin">Twin</option>
+                                }
+
+                                @if (Model.RoomBedType == "Queen")
+                                {
+                                    <option value="Queen" selected>Queen</option>
+                                }
+                                else
+                                {
+                                    <option value="Queen">Queen</option>
+                                }
+
+                                @if (Model.RoomBedType == "King")
+                                {
+                                    <option value="King" selected>King</option>
+                                }
+                                else
+                                {
+                                    <option value="King">King</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="roomSelect" class="form-label">Available Rooms</label>
+                        <select id="roomSelect" name="RoomId" class="form-control" required>
+                            <!-- Will be populated via JavaScript -->
+                        </select>
+                        <input type="hidden" id="roomNameInput" asp-for="RoomName" />
+                        <input type="hidden" id="roomCategoryInput" asp-for="RoomCategory" />
+                        <input type="hidden" id="roomBedTypeInput" asp-for="RoomBedType" />
+                        <input type="hidden" id="roomPriceInput" asp-for="RoomPrice" />
+                    </div>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="mb-4">
+                    <h5>Select Dates</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CheckInDate" class="form-label">Check-in Date</label>
+                            <input type="date" asp-for="CheckInDate" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required onchange="calculateTotal()" />
+                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CheckOutDate" class="form-label">Check-out Date</label>
+                            <input type="date" asp-for="CheckOutDate" class="form-control" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required onchange="calculateTotal()" />
+                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Summary -->
+                <div class="mb-4 p-3 bg-light text-dark rounded">
+                    <h5>Booking Summary</h5>
+                    <div id="bookingSummary">
+                        <p><strong>Selected Room:</strong> <span id="summaryRoomName">@Model.RoomName</span></p>
+                        <p><strong>Room Category:</strong> <span id="summaryCategory">@Model.RoomCategory</span></p>
+                        <p><strong>Bed Type:</strong> <span id="summaryBedType">@Model.RoomBedType</span></p>
+                        <p><strong>Price per Night:</strong> <span id="summaryPrice">@Model.RoomPrice.ToString("C")</span></p>
+                        <p><strong>Total Nights:</strong> <span id="summaryNights">@((Model.CheckOutDate - Model.CheckInDate).TotalDays)</span></p>
+                        <p><strong>Total Price:</strong> <span id="summaryTotal">@((Model.RoomPrice * (decimal)(Model.CheckOutDate - Model.CheckInDate).TotalDays).ToString("C"))</span></p>
+                    </div>
+                </div>
 
                 <div class="row">
                     <!-- Full Name -->
@@ -138,4 +226,110 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        // AJAX call to get rooms based on category and bed type
+        function updateRoomSelection() {
+            const category = document.getElementById('roomCategory').value;
+            const bedType = document.getElementById('bedType').value;
+
+            if (category && bedType) {
+                // Make AJAX call to get rooms
+                fetch(`/Home/GetAvailableRooms?category=${category}&bedType=${bedType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const roomSelect = document.getElementById('roomSelect');
+                        roomSelect.innerHTML = ''; // Clear options
+
+                        // Add rooms to select
+                        data.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.text = `${room.name} - ${room.price.toFixed(2)}`;
+                            option.dataset.name = room.name;
+                            option.dataset.category = room.category;
+                            option.dataset.bedType = room.bedType;
+                            option.dataset.price = room.price;
+                            roomSelect.appendChild(option);
+                        });
+
+                        // If rooms are available, select the first one
+                        if (data.length > 0) {
+                            roomSelect.selectedIndex = 0;
+                            updateRoomDetails();
+                        }
+                    })
+                    .catch(error => console.error('Error fetching rooms:', error));
+            }
+        }
+
+        // Update hidden fields and summary when room selection changes
+        function updateRoomDetails() {
+            const roomSelect = document.getElementById('roomSelect');
+            if (roomSelect.selectedIndex >= 0) {
+                const option = roomSelect.options[roomSelect.selectedIndex];
+                const name = option.dataset.name;
+                const category = option.dataset.category;
+                const bedType = option.dataset.bedType;
+                const price = parseFloat(option.dataset.price);
+
+                // Update hidden inputs
+                document.getElementById('roomNameInput').value = name;
+                document.getElementById('roomCategoryInput').value = category;
+                document.getElementById('roomBedTypeInput').value = bedType;
+                document.getElementById('roomPriceInput').value = price;
+
+                // Update summary
+                document.getElementById('summaryRoomName').textContent = name;
+                document.getElementById('summaryCategory').textContent = category;
+                document.getElementById('summaryBedType').textContent = bedType;
+                document.getElementById('summaryPrice').textContent = '$' + price.toFixed(2);
+
+                calculateTotal();
+            }
+        }
+
+        // Calculate total nights and price
+        function calculateTotal() {
+            const checkInDate = new Date(document.querySelector('input[name="CheckInDate"]').value);
+            const checkOutDate = new Date(document.querySelector('input[name="CheckOutDate"]').value);
+            const price = parseFloat(document.getElementById('roomPriceInput').value) || 0;
+
+            if (checkInDate && checkOutDate && checkOutDate > checkInDate) {
+                const nights = Math.floor((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+                const total = price * nights;
+
+                document.getElementById('summaryNights').textContent = nights;
+                document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
+            }
+        }
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum checkout date based on check-in date
+            document.querySelector('input[name="CheckInDate"]').addEventListener('change', function() {
+                var checkInDate = new Date(this.value);
+                var nextDay = new Date(checkInDate);
+                nextDay.setDate(checkInDate.getDate() + 1);
+
+                var checkOutInput = document.querySelector('input[name="CheckOutDate"]');
+                checkOutInput.min = nextDay.toISOString().split('T')[0];
+
+                // If current check-out date is before new minimum, update it
+                if (new Date(checkOutInput.value) <= checkInDate) {
+                    checkOutInput.value = nextDay.toISOString().split('T')[0];
+                }
+
+                calculateTotal();
+            });
+
+            // If category and bed type are already selected, load rooms
+            if (document.getElementById('roomCategory').value && document.getElementById('bedType').value) {
+                updateRoomSelection();
+            }
+
+            // Add change event to room select
+            document.getElementById('roomSelect').addEventListener('change', updateRoomDetails);
+        });
+    </script>
 }

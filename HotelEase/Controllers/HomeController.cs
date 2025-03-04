@@ -374,7 +374,7 @@ namespace HotelEase.Controllers
             // Create a form model with the booking details
             var model = new FormModel
             {
-                BookingId = booking.Id, // This is key - make sure this is set!
+                BookingId = booking.Id,
                 RoomId = booking.RoomId,
                 RoomName = booking.Room.Name,
                 RoomCategory = booking.Room.Category,
@@ -386,9 +386,8 @@ namespace HotelEase.Controllers
                 Email = user.Email ?? string.Empty
             };
 
-            ViewBag.IsEditing = true; // Add this to indicate we're in edit mode
+            ViewBag.IsEditing = true;
 
-            // Pass the model to the form view
             return View("Form", model);
         }
         // POST: Update Booking
@@ -472,6 +471,48 @@ namespace HotelEase.Controllers
 
             // Redirect to payment page
             return RedirectToAction("Payment");
+        }
+
+        // GET: GetAvailableRooms
+        public async Task<IActionResult> GetAvailableRooms(string category, string bedType)
+        {
+            // Query for rooms that match the criteria
+            var rooms = await _context.Rooms
+                .Where(r => r.Category == category && r.BedType == bedType)
+                .Select(r => new
+                {
+                    id = r.Id,
+                    name = r.Name,
+                    category = r.Category,
+                    bedType = r.BedType,
+                    price = r.Price
+                })
+                .ToListAsync();
+
+            return Json(rooms);
+        }
+
+        // GET: GetBookingDetails
+        public async Task<IActionResult> GetBookingDetails(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Room)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            // Verify the current user owns this booking
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || (booking.UserId != user.Id && !user.IsAdmin))
+            {
+                return Unauthorized();
+            }
+
+            // Return a partial view with the booking details
+            return PartialView("_BookingDetails", booking);
         }
     }
 }

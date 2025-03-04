@@ -1,0 +1,23 @@
+﻿@model HotelEase.Models.Booking
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Room?.Name</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Check-in Date:</strong> @Model.CheckInDate.ToShortDateString()</p>
+                <p><strong>Check-out Date:</strong> @Model.CheckOutDate.ToShortDateString()</p>
+                <p><strong>Total Nights:</strong> @((Model.CheckOutDate - Model.CheckInDate).TotalDays)</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Room Category:</strong> @Model.Room?.Category</p>
+                <p><strong>Bed Type:</strong> @Model.Room?.BedType</p>
+                <p><strong>Total Price:</strong> @Model.TotalPrice.ToString("C")</p>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3">
+            <p><strong>Confirmation Code:</strong> @Model.ConfirmationCode</p>
+            <p class="mb-0"><small>Please keep this code safe. You'll need it for check-in.</small></p>
+        </div>
+    </div>
+</div>

@@ -34,8 +34,8 @@
                                         <th>Check-in</th>
                                         <th>Check-out</th>
                                         <th>Amount</th>
-                                        <th>Confirmation Code</th>
                                         <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,7 +46,6 @@
                                             <td>@booking.CheckInDate.ToShortDateString()</td>
                                             <td>@booking.CheckOutDate.ToShortDateString()</td>
                                             <td>@booking.TotalPrice.ToString("C")</td>
-                                            <td>@booking.ConfirmationCode</td>
                                             <td>
                                                 @{
                                                     var statusClass = booking.Status switch
@@ -65,7 +64,19 @@
                                                 {
                                                     <div class="btn-group">
                                                         <a asp-controller="Home" asp-action="EditBooking" asp-route-id="@booking.Id" class="btn btn-sm btn-primary">Edit</a>
-                                                        <a asp-controller="Home" asp-action="ResumePayment" asp-route-id="@booking.Id" class="btn btn-sm btn-success">Resume Payment</a>
+                                                        <a asp-controller="Home" asp-action="ResumePayment" asp-route-id="@booking.Id" class="btn btn-sm btn-success">Pay Now</a>
+                                                        <form asp-controller="Dashboard" asp-action="CancelBooking" asp-route-id="@booking.Id" method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                                            <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                                        </form>
+                                                    </div>
+                                                }
+                                                @if (booking.Status == BookingStatus.Confirmed)
+                                                {
+                                                    <div class="btn-group">
+                                                        <a href="#" class="btn btn-sm btn-info" onclick="showBookingDetails(@booking.Id)">Details</a>
+                                                        <form asp-controller="Dashboard" asp-action="CancelBooking" asp-route-id="@booking.Id" method="post" onsubmit="return confirm('Are you sure you want to cancel this confirmed booking?');">
+                                                            <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                                        </form>
                                                     </div>
                                                 }
                                             </td>
@@ -133,24 +144,35 @@
     </div>
 </div>
 
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingDetailsModalLabel">Booking Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="bookingDetailsContent">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add JavaScript for booking actions -->
 <script>
-    function cancelBooking(bookingId) {
-        if (confirm('Are you sure you want to cancel this booking?')) {
-            // Here you would normally make an AJAX call to update the booking status
-            alert('Booking ' + bookingId + ' has been cancelled.');
-            window.location.reload();
-        }
-    }
-
-    function viewDetails(bookingId) {
-        // Here you would normally navigate to a details page or open a modal
-        alert('Viewing details for booking ' + bookingId);
-    }
-
-    function printConfirmation(bookingId) {
-        // Here you would normally generate a printable confirmation
-        alert('Printing confirmation for booking ' + bookingId);
-        window.print();
+    function showBookingDetails(bookingId) {
+        // Fetch booking details
+        fetch(`/Home/GetBookingDetails/${bookingId}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('bookingDetailsContent').innerHTML = html;
+                var modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+                modal.show();
+            })
+            .catch(error => console.error('Error fetching booking details:', error));
     }
 </script>
