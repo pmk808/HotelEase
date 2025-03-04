@@ -95,7 +95,45 @@ namespace HotelEase.Controllers
                 int nights = (int)(model.CheckOutDate - model.CheckInDate).TotalDays;
                 decimal totalPrice = room.Price * nights;
 
-                // Create booking in pending status
+                // Check if this is an update to an existing booking
+                if (model.BookingId.HasValue && model.BookingId.Value > 0)
+                {
+                    // Get the existing booking
+                    var existingBooking = await _context.Bookings.FindAsync(model.BookingId.Value);
+                    if (existingBooking != null)
+                    {
+                        // Verify the current user owns this booking
+                        var user = await _userManager.GetUserAsync(User);
+                        if (user == null || (existingBooking.UserId != user.Id && !user.IsAdmin))
+                        {
+                            return Unauthorized();
+                        }
+
+                        // Only allow editing of pending bookings
+                        if (existingBooking.Status != BookingStatus.Pending)
+                        {
+                            TempData["ErrorMessage"] = "Only pending bookings can be edited.";
+                            return RedirectToAction("UserDashboard", "Dashboard");
+                        }
+
+                        // Update booking details
+                        existingBooking.CheckInDate = model.CheckInDate;
+                        existingBooking.CheckOutDate = model.CheckOutDate;
+                        existingBooking.TotalPrice = totalPrice;
+
+                        await _context.SaveChangesAsync();
+
+                        // Store the booking ID in TempData for the payment page
+                        TempData["BookingId"] = existingBooking.Id;
+                        TempData["TotalPriceString"] = totalPrice.ToString();
+
+                        TempData["SuccessMessage"] = "Booking updated successfully!";
+
+                        return RedirectToAction("Payment");
+                    }
+                }
+
+                // Create new booking in pending status
                 var booking = new Booking
                 {
                     RoomId = model.RoomId,
@@ -121,8 +159,6 @@ namespace HotelEase.Controllers
 
                 // Store the booking ID in TempData for the payment page
                 TempData["BookingId"] = booking.Id;
-
-                // Convert decimal to string before storing in TempData
                 TempData["TotalPriceString"] = totalPrice.ToString();
 
                 TempData["SuccessMessage"] = "Booking information submitted successfully!";
@@ -206,6 +242,7 @@ namespace HotelEase.Controllers
                     var service = new PaymentIntentService();
                     var paymentIntent = await service.CreateAsync(options);
 
+                    // Only update booking to Confirmed status after successful payment
                     // Generate a confirmation code
                     booking.ConfirmationCode = GenerateConfirmationCode();
                     booking.Status = BookingStatus.Confirmed;
@@ -306,6 +343,135 @@ namespace HotelEase.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        // GET: Edit Booking
+        public async Task<IActionResult> EditBooking(int id)
+        {
+            // Get the booking
+            var booking = await _context.Bookings
+                .Include(b => b.Room)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            // Verify the current user owns this booking
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || (booking.UserId != user.Id && !user.IsAdmin))
+            {
+                return Unauthorized();
+            }
+
+            // Only allow editing of pending bookings
+            if (booking.Status != BookingStatus.Pending)
+            {
+                TempData["ErrorMessage"] = "Only pending bookings can be edited.";
+                return RedirectToAction("UserDashboard", "Dashboard");
+            }
+
+            // Create a form model with the booking details
+            var model = new FormModel
+            {
+                BookingId = booking.Id, // This is key - make sure this is set!
+                RoomId = booking.RoomId,
+                RoomName = booking.Room.Name,
+                RoomCategory = booking.Room.Category,
+                RoomBedType = booking.Room.BedType,
+                RoomPrice = booking.Room.Price,
+                CheckInDate = booking.CheckInDate,
+                CheckOutDate = booking.CheckOutDate,
+                FullName = user.FullName,
+                Email = user.Email ?? string.Empty
+            };
+
+            ViewBag.IsEditing = true; // Add this to indicate we're in edit mode
+
+            // Pass the model to the form view
+            return View("Form", model);
+        }
+        // POST: Update Booking
+        [HttpPost]
+        public async Task<IActionResult> UpdateBooking(FormModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Get the existing booking
+                var booking = await _context.Bookings.FindAsync(model.BookingId);
+                if (booking == null)
+                {
+                    return NotFound();
+                }
+
+                // Verify the current user owns this booking
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null || (booking.UserId != user.Id && !user.IsAdmin))
+                {
+                    return Unauthorized();
+                }
+
+                // Only allow editing of pending bookings
+                if (booking.Status != BookingStatus.Pending)
+                {
+                    TempData["ErrorMessage"] = "Only pending bookings can be edited.";
+                    return RedirectToAction("UserDashboard", "Dashboard");
+                }
+
+                // Update booking details
+                booking.CheckInDate = model.CheckInDate;
+                booking.CheckOutDate = model.CheckOutDate;
+
+                // Calculate new total price
+                int nights = (int)(model.CheckOutDate - model.CheckInDate).TotalDays;
+                var room = await _context.Rooms.FindAsync(booking.RoomId);
+                if (room == null)
+                {
+                    return NotFound();
+                }
+                booking.TotalPrice = room.Price * nights;
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Booking updated successfully!";
+
+                // Redirect to resume payment
+                return RedirectToAction("ResumePayment", new { id = booking.Id });
+            }
+
+            return View("Form", model);
+        }
+
+        // GET: Resume Payment
+        public async Task<IActionResult> ResumePayment(int id)
+        {
+            // Get the booking
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            // Verify the current user owns this booking
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || (booking.UserId != user.Id && !user.IsAdmin))
+            {
+                return Unauthorized();
+            }
+
+            // Only allow resuming payment for pending bookings
+            if (booking.Status != BookingStatus.Pending)
+            {
+                TempData["ErrorMessage"] = "Payment can only be resumed for pending bookings.";
+                return RedirectToAction("UserDashboard", "Dashboard");
+            }
+
+            // Store booking ID in TempData for the payment page
+            TempData["BookingId"] = booking.Id;
+            TempData["TotalPriceString"] = booking.TotalPrice.ToString();
+
+            // Redirect to payment page
+            return RedirectToAction("Payment");
         }
     }
 }

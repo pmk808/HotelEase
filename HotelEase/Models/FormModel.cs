@@ -29,6 +29,7 @@ namespace HotelEase.Models
         public string RoomCategory { get; set; }
         public string RoomBedType { get; set; }
         public decimal RoomPrice { get; set; }
+        public int? BookingId { get; set; }
     }
 
     // Custom validation attribute to ensure check-out date is after check-in date

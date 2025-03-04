@@ -60,6 +60,15 @@
                                                 }
                                                 <span class="badge @statusClass">@booking.Status</span>
                                             </td>
+                                            <td>
+                                                @if (booking.Status == BookingStatus.Pending)
+                                                {
+                                                    <div class="btn-group">
+                                                        <a asp-controller="Home" asp-action="EditBooking" asp-route-id="@booking.Id" class="btn btn-sm btn-primary">Edit</a>
+                                                        <a asp-controller="Home" asp-action="ResumePayment" asp-route-id="@booking.Id" class="btn btn-sm btn-success">Resume Payment</a>
+                                                    </div>
+                                                }
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>

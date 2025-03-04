@@ -94,6 +94,7 @@
             </div>
 
             <form asp-action="SubmitForm" method="post" class="needs-validation" novalidate>
+                <input type="hidden" asp-for="BookingId" />
                 <input type="hidden" asp-for="RoomId" />
                 <input type="hidden" asp-for="RoomName" />
                 <input type="hidden" asp-for="RoomCategory" />
@@ -119,7 +120,14 @@
                 </div>
 
                 <div class="text-center mt-3">
-                    <button type="submit" class="btn btn-primary">Continue to Payment</button>
+                    @if (ViewBag.IsEditing == true)
+                    {
+                        <button type="submit" class="btn btn-primary">Update Booking</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary">Continue to Payment</button>
+                    }
                 </div>
             </form>
         </div>
