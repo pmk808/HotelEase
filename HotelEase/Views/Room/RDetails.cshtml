@@ -1,4 +1,4 @@
-﻿<!-- Views/Room/RDetails.cshtml - Modified version -->
+﻿<!-- Improved Room Details View for RDetails.cshtml -->
 @model HotelEase.Controllers.RoomController.RoomDetailsViewModel
 @{
     ViewData["Title"] = "Room Details";
@@ -9,123 +9,181 @@
                     (availabilityStatus == AvailabilityStatus.LimitedAvailability ? "Limited Availability" : "Not Available");
 }
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="fs-1">@Model.Room.Name</h1>
+<div class="container room-details-container">
+    <!-- Room Header with Name and Availability -->
+    <div class="room-details-header d-flex justify-content-between align-items-center">
+        <h1 class="fs-2 fw-bold">@Model.Room.Name</h1>
         <div class="d-flex align-items-center">
-            <span class="status-indicator me-2 @statusClass"></span>
-            <span class="fs-4 fw-bold">@statusText</span>
+            <span class="status-indicator @statusClass"></span>
+            <span class="fs-5 fw-bold">@statusText</span>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-12">
-            <img src="/imgs/@(Model.Room.Category.ToLower()).jpg" class="img-fluid rounded" alt="Room Image">
+    <!-- Main Room Image -->
+    <div class="room-gallery-main mb-3">
+        <img src="/imgs/@(Model.Room.Category.ToLower()).jpg" class="img-fluid" alt="Room Image">
+    </div>
+
+    <!-- Room Image Thumbnails -->
+    <div class="row room-gallery-thumbnails g-2 mb-4">
+        <div class="col-md-2 col-4">
+            <img src="/imgs/singlebed.jpg" class="img-fluid" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-4">
+            <img src="/imgs/room.jpg" class="img-fluid" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-4">
+            <img src="/imgs/pool.jpg" class="img-fluid" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-4">
+            <img src="/imgs/twinbed.jpg" class="img-fluid" alt="Room Image">
+        </div>
+        <div class="col-md-2 col-4">
+            <img src="/imgs/suite.jpg" class="img-fluid" alt="Room Image">
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-md-2 col-sm-4 col-6">
-            <img src="/imgs/singlebed.jpg" class="img-fluid rounded" alt="Room Image">
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
-            <img src="/imgs/room.jpg" class="img-fluid rounded" alt="Room Image">
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
-            <img src="/imgs/pool.jpg" class="img-fluid rounded" alt="Room Image">
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
-            <img src="/imgs/twinbed.jpg" class="img-fluid rounded" alt="Room Image">
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
-            <img src="/imgs/suite.jpg" class="img-fluid rounded" alt="Room Image">
-        </div>
-    </div>
-
-    <h3 class="fw-bold mt-5">Inclusions</h3>
-    <p class="fs-4 mt-4">@GetRoomInclusions(Model.Room)</p>
-
-    <h3 class="fw-bold mt-4">Price</h3>
-    <p class="fs-4">@Model.Room.Price.ToString("C") per night</p>
-
-    <h3 class="fw-bold mt-4">Check Availability</h3>
-    <div class="card p-4 mb-4">
-        <form asp-action="CheckAvailability" method="post">
-            <input type="hidden" name="roomId" value="@Model.Room.Id" />
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="mb-3">
-                        <label for="checkInDate" class="form-label">Check-in Date</label>
-                        <input type="date" id="checkInDate" name="checkInDate" class="form-control"
-                               value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+    <div class="row">
+        <!-- Room Details Section - Left Column -->
+        <div class="col-lg-8">
+            <!-- Inclusions Section -->
+            <div class="room-info-section">
+                <h3 class="fw-bold">Room Inclusions</h3>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p class="fs-5 mb-0">@GetRoomInclusions(Model.Room)</p>
                     </div>
-                </div>
-                <div class="col-md-5">
-                    <div class="mb-3">
-                        <label for="checkOutDate" class="form-label">Check-out Date</label>
-                        <input type="date" id="checkOutDate" name="checkOutDate" class="form-control"
-                               value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
-                    </div>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Check</button>
                 </div>
             </div>
-        </form>
-    </div>
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["ErrorMessage"]
+            <!-- Check-in & Check-out Section -->
+            <div class="room-info-section">
+                <h3 class="fw-bold">Check-in & Check-out</h3>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <ul class="list-unstyled fs-5">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Check-in: From 3:00 PM (Early check-in subject to availability)</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Check-out: Before 11:00 AM (Late check-out subject to availability)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check-in Instructions Section -->
+            <div class="room-info-section">
+                <h3 class="fw-bold">Check-in Instructions</h3>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p class="fs-5 mb-0">
+                            Guests will receive an email with check-in instructions on the day their booking is confirmed.
+                            A valid ID or passport and a credit card or cash deposit are required at check-in for incidental charges.
+                            For more details, please contact us using the information provided in the booking confirmation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Children & Extra Beds Section -->
+            <div class="room-info-section">
+                <h3 class="fw-bold">Children & Extra Beds</h3>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p class="fs-5 mb-3">
+                            Children 12 years old and under can stay for free using existing bedding.
+                        </p>
+                        <div class="mb-3">
+                            <h5>Breakfast Policy for Kids:</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-child text-primary me-2"></i> Ages 0-5: Free breakfast</li>
+                                <li><i class="fas fa-child text-primary me-2"></i> Ages 6-12: Half-price breakfast</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5>Extra Bed Charge:</h5>
+                            <p class="mb-0">₱1,875 nett per night, inclusive of breakfast.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    }
 
-    <h3 class="fw-bold mt-4">Check-in & Check-out</h3>
-    <ul class="fs-5">
-        <li>Check-in: From 3:00 PM (Early check-in subject to availability)</li>
-        <li>Check-out: Before 11:00 AM (Late check-out subject to availability)</li>
-    </ul>
+        <!-- Booking Section - Right Column -->
+        <div class="col-lg-4">
+            <!-- Price Card -->
+            <div class="card mb-4 shadow">
+                <div class="card-body text-center p-4">
+                    <h4 class="mb-3">Room Price</h4>
+                    <div class="price-display mb-3">
+                        <span class="display-5 fw-bold text-primary">@Model.Room.Price.ToString("C0")</span>
+                        <span class="text-muted">/night</span>
+                    </div>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2"><i class="fas fa-wifi text-success me-2"></i> Free Wi-Fi</li>
+                        <li class="mb-2"><i class="fas fa-coffee text-success me-2"></i> Breakfast Included</li>
+                        <li class="mb-2"><i class="fas fa-snowflake text-success me-2"></i> Air Conditioning</li>
+                        <li><i class="fas fa-tv text-success me-2"></i> Flat-screen TV</li>
+                    </ul>
+                </div>
+            </div>
 
-    <h3 class="fw-bold mt-4">Check-in Instructions</h3>
-    <p class="fs-5">
-        Guests will receive an email with check-in instructions on the day their booking is confirmed.
-        A valid ID or passport and a credit card or cash deposit are required at check-in for incidental charges.
-        For more details, please contact us using the information provided in the booking confirmation.
-    </p>
+            <!-- Check Availability Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold">Check Availability</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CheckAvailability" method="post">
+                        <input type="hidden" name="roomId" value="@Model.Room.Id" />
 
-    <h3 class="fw-bold mt-4">Children & Extra Beds</h3>
-    <p class="fs-5">
-        Children 12 years old and under can stay for free using existing bedding.<br>
-        <strong>Breakfast Policy for Kids:</strong><br>
-        Ages 0-5: Free breakfast<br>
-        Ages 6-12: Half-price breakfast<br>
-        <strong>Extra Bed Charge:</strong> ₱1,875 nett per night, inclusive of breakfast.
-    </p>
+                        <div class="mb-3">
+                            <label for="checkInDate" class="form-label fw-bold">Check-in Date</label>
+                            <input type="date" id="checkInDate" name="checkInDate" class="form-control form-control-lg"
+                                   value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                   min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
 
-    <h3 class="fw-bold mt-4">Room Availability Status</h3>
-    <p class="fs-5">
-        <span class="status-indicator bg-success"></span> Green: Lots of rooms available – You can book anytime!<br>
-        <span class="status-indicator bg-warning"></span> Orange: Limited rooms left – Hurry and book soon!<br>
-        <span class="status-indicator bg-danger"></span> Red: Fully booked – No rooms available for the selected date.
-    </p>
+                        <div class="mb-4">
+                            <label for="checkOutDate" class="form-label fw-bold">Check-out Date</label>
+                            <input type="date" id="checkOutDate" name="checkOutDate" class="form-control form-control-lg"
+                                   value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                                   min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                        </div>
 
-    <div class="text-center mt-5">
-        <a href="#" class="btn btn-primary" onclick="document.getElementById('checkInDate').focus();">Book Now</a>
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger mb-3">
+                                @TempData["ErrorMessage"]
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">Check Availability</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Room Availability Status Legend -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Room Availability Status</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <span class="status-indicator bg-success me-2"></span>
+                            <span>Available – Book anytime!</span>
+                        </li>
+                        <li class="mb-2">
+                            <span class="status-indicator bg-warning me-2"></span>
+                            <span>Limited availability – Book soon!</span>
+                        </li>
+                        <li>
+                            <span class="status-indicator bg-danger me-2"></span>
+                            <span>Fully booked – No rooms available.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<hr class="divider" style="color: white; background-color: white;">
-
-<!-- Embedded CSS -->
-<style>
-    .status-indicator {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-</style>
 
 @functions {
     private string GetRoomInclusions(HotelEase.Models.Room room)
@@ -180,6 +238,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
 
     <script>
         // Set minimum check-out date based on check-in date

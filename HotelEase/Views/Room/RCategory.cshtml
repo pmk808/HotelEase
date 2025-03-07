@@ -1,42 +1,49 @@
-﻿@model Dictionary<string, List<HotelEase.Models.Room>>
+﻿<!-- Improved Room Categories View for RCategory.cshtml -->
+@model Dictionary<string, List<HotelEase.Models.Room>>
 @{
     ViewData["Title"] = "Room Categories";
 }
 
-@foreach (var category in Model.Keys)
-{
-    <section id="@(category)-room">
-        <div class="container mt-5">
-            <h1 class="text-center">@category.ToUpper() ROOMS</h1>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Our Room Categories</h1>
+        <p class="lead text-muted">Find the perfect accommodation for your stay</p>
+    </div>
 
-            <div class="row mt-4">
+    @foreach (var category in Model.Keys)
+    {
+        <section class="mb-5">
+            <h2 class="mb-4 text-center fw-bold">@category Rooms</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                 @foreach (var room in Model[category])
                 {
-                    <div class="col-12 col-md-6 col-lg-4 d-flex mb-2 justify-content-center">
-                        <div class="card shadow" style="max-width: 22rem; border-radius: 20px;">
-                            <img src="/imgs/@(room.Category.ToLower()).jpg" class="card-img-top img-fluid" alt="Room Image" style="border-radius: 20px 20px 0 0;">
+                    <div class="col">
+                        <div class="card room-card h-100">
+                            <img src="/imgs/@(room.Category.ToLower()).jpg" class="card-img-top" alt="@room.Name">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="card-title">@room.Name</h5>
-                                    <span class="status-indicator @GetAvailabilityStatusClass(room.Id)"></span>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">@room.Name</h5>
+                                    <span class="badge @GetAvailabilityStatusClass(room.Id) rounded-pill">
+                                        @GetAvailabilityStatus(room.Id)
+                                    </span>
                                 </div>
                                 <p class="card-text">@GetRoomDescription(room)</p>
-                                <div class="d-flex justify-content-between">
-                                    <span class="bg-tertiary fs-6">@room.Price.ToString("C") <small>per night</small></span>
-                                </div>
-                                <div class="d-flex mt-3 justify-content-center">
-                                    <a asp-controller="Room" asp-action="RDetails" asp-route-id="@room.Id" class="btn btn-primary">View Room</a>
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <div class="price-tag">
+                                        <span class="h5 text-primary fw-bold">@room.Price.ToString("C0")</span>
+                                        <small class="text-muted">/night</small>
+                                    </div>
+                                    <a asp-controller="Room" asp-action="RDetails" asp-route-id="@room.Id"
+                                       class="btn btn-outline-primary">View Details</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 }
             </div>
-        </div>
-    </section>
-}
-
-<hr class="divider" style="color: white; background-color: white;">
+        </section>
+    }
+</div>
 
 @functions {
     private string GetAvailabilityStatusClass(int roomId)
@@ -44,6 +51,12 @@
         // In a real app, this would check the database
         // For now, just return a default color
         return "bg-success";
+    }
+
+    private string GetAvailabilityStatus(int roomId)
+    {
+        // In a real app, this would check the database
+        return "Available";
     }
 
     private string GetRoomDescription(HotelEase.Models.Room room)
@@ -54,13 +67,13 @@
         switch (room.Category)
         {
             case "Standard":
-                description = "with Air-conditioning, TV, Free Wi-Fi";
+                description = "Cozy room with air-conditioning, TV, and free Wi-Fi";
                 break;
             case "Deluxe":
-                description = "Free WiFi, Smart TV, Mini-Fridge, Complimentary Breakfast";
+                description = "Spacious room with free WiFi, smart TV, mini-fridge, and complimentary breakfast";
                 break;
             case "Suite":
-                description = "Free WiFi, Smart TV, Mini-Bar, Jacuzzi, Living Space, Complimentary Breakfast & Dinner";
+                description = "Luxurious suite with free WiFi, smart TV, mini-bar, jacuzzi, living space, and complimentary meals";
                 break;
             default:
                 description = "Comfortable accommodations with essential amenities";
@@ -70,22 +83,21 @@
         switch (room.BedType)
         {
             case "Single":
-                description += ", good for 1 person";
+                description += ", perfect for solo travelers";
                 break;
             case "Double":
             case "Twin":
             case "Queen":
-                description += ", good for 2 persons";
+                description += ", ideal for couples or two guests";
                 break;
             case "King":
-                description += ", good for 2-3 persons";
+                description += ", spacious enough for families";
                 break;
             default:
-                description += ", ideal for your stay";
+                description += ", perfect for your stay";
                 break;
         }
 
         return description;
     }
 }
-

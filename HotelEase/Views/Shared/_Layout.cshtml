@@ -12,10 +12,12 @@
 </head>
 <body style="background-color: #EFF1F3">
     <header>
-        <nav class="navbar navbar-expand-lg bg-light rounded p-2">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow">
+            <div class="container">
                 <!-- Logo -->
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">HotelEase</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="text-primary">Hotel</span><span class="text-secondary">Ease</span>
+                </a>
 
                 <!-- Toggler Button -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -27,24 +29,21 @@
                     <!-- Centered Links -->
                     <ul class="navbar-nav mx-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">About Us</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">About Us</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Room" asp-action="RCategory">Booking</a>
+                            <a class="nav-link" asp-area="" asp-controller="Room" asp-action="RCategory">Rooms</a>
                         </li>
                     </ul>
-
-                  
 
                     <!-- Login Section -->
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
-
     </header>
    
 

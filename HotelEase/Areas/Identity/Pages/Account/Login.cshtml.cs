@@ -107,14 +107,11 @@ namespace HotelEase.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
-
+            returnUrl = Url.Content("~/"); // Always set default return URL to home page
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
@@ -130,7 +127,7 @@ namespace HotelEase.Areas.Identity.Pages.Account
                         TempData.Keep("PendingCheckInDate");
                         TempData.Keep("PendingCheckOutDate");
 
-                        // Redirect to a specialized action that will handle resuming the booking
+                        // Redirect to form for bookings in progress
                         return RedirectToAction("Form", "Home", new
                         {
                             roomId = TempData["PendingRoomId"],
@@ -139,6 +136,7 @@ namespace HotelEase.Areas.Identity.Pages.Account
                         });
                     }
 
+                    // For regular logins, always redirect to the homepage
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

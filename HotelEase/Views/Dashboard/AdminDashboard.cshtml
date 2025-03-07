@@ -1,55 +1,177 @@
-﻿@model IEnumerable<HotelEase.Models.Booking>
+﻿<!-- Improved Admin Dashboard -->
+@model IEnumerable<HotelEase.Models.Booking>
 @{
     ViewData["Title"] = "Admin Dashboard";
+
+    // Calculate booking statistics
+    var totalBookings = Model.Count();
+    var pendingBookings = Model.Count(b => b.Status == BookingStatus.Pending);
+    var confirmedBookings = Model.Count(b => b.Status == BookingStatus.Confirmed);
+    var cancelledBookings = Model.Count(b => b.Status == BookingStatus.Cancelled);
+    var completedBookings = Model.Count(b => b.Status == BookingStatus.Completed);
+
+    // Calculate total revenue
+    var totalRevenue = Model.Where(b => b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Completed)
+                            .Sum(b => b.TotalPrice);
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Admin Dashboard</h2>
+<div class="container dashboard-container py-5">
+    <div class="dashboard-header">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <h2 class="mb-0">Admin Dashboard</h2>
+                <p class="text-muted mb-0">Welcome to the admin control panel</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a asp-controller="Admin" asp-action="CreateRoom" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Room
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <!-- Main Tabs (Bookings & Room Management) -->
-    <ul class="nav nav-tabs mb-4" id="dashboard-tabs">
+    <!-- Dashboard Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100 border-left-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1 text-muted">Total Bookings</div>
+                            <div class="h5 mb-0 fw-bold">@totalBookings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100 border-left-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1 text-muted">Total Revenue</div>
+                            <div class="h5 mb-0 fw-bold">@totalRevenue.ToString("C0")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100 border-left-info">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1 text-muted">Active Bookings</div>
+                            <div class="h5 mb-0 fw-bold">@confirmedBookings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card h-100 border-left-warning">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-uppercase mb-1 text-muted">Pending Bookings</div>
+                            <div class="h5 mb-0 fw-bold">@pendingBookings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Tabs -->
+    <ul class="nav nav-tabs" id="dashboard-tabs">
         <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#bookingTab">Bookings</a>
+            <a class="nav-link active" data-bs-toggle="tab" href="#bookingTab">
+                <i class="fas fa-bed me-2"></i>Bookings Management
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" asp-controller="Admin" asp-action="RoomInventory">Room Management</a>
+            <a class="nav-link" asp-controller="Admin" asp-action="RoomInventory">
+                <i class="fas fa-door-open me-2"></i>Room Management
+            </a>
         </li>
     </ul>
 
     <div class="tab-content">
-        <!-- Bookings Section -->
+        <!-- Bookings Management Section -->
         <section class="tab-pane fade show active" id="bookingTab">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Booking Management</h5>
+            <div class="card dashboard-card mt-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">All Bookings</h5>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-light" id="btnExportBookings">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <div class="dropdown d-inline-block ms-2">
+                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="filterDropdown"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                                <li><a class="dropdown-item" href="#" data-filter="all">All Bookings</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="pending">Pending</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="confirmed">Confirmed</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="cancelled">Cancelled</a></li>
+                                <li><a class="dropdown-item" href="#" data-filter="completed">Completed</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Consolidated booking table -->
-                    <div class="table-responsive">
-                        @if (Model.Any())
-                        {
-                            <table class="table table-striped">
-                                <thead>
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0" id="bookingsTable">
+                                <thead class="table-light">
                                     <tr>
+                                        <th>ID</th>
+                                        <th>Guest</th>
                                         <th>Room</th>
-                                        <th>User</th>
                                         <th>Check-in</th>
                                         <th>Check-out</th>
                                         <th>Amount</th>
-                                        <th>Confirmation Code</th>
+                                        <th>Booking Date</th>
                                         <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var booking in Model)
                                     {
-                                        <tr>
-                                            <td>@booking.Room?.Name</td>
-                                            <td>@booking.User?.FullName</td>
-                                            <td>@booking.CheckInDate.ToShortDateString()</td>
-                                            <td>@booking.CheckOutDate.ToShortDateString()</td>
+                                        <tr data-status="@booking.Status.ToString().ToLower()">
+                                            <td><small>#@booking.Id</small></td>
+                                            <td>
+                                                <div>
+                                                    <h6 class="mb-0">@booking.User?.FullName</h6>
+                                                    <small class="text-muted">@booking.User?.Email</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <h6 class="mb-0">@booking.Room?.Name</h6>
+                                                    <small class="text-muted">@booking.Room?.Category - @booking.Room?.BedType</small>
+                                                </div>
+                                            </td>
+                                            <td>@booking.CheckInDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.CheckOutDate.ToString("MMM dd, yyyy")</td>
                                             <td>@booking.TotalPrice.ToString("C")</td>
-                                            <td>@booking.ConfirmationCode</td>
+                                            <td>@booking.BookingDate.ToString("MMM dd, yyyy")</td>
                                             <td>
                                                 @{
                                                     var statusClass = booking.Status switch
@@ -60,53 +182,149 @@
                                                         BookingStatus.Completed => "bg-success",
                                                         _ => "bg-secondary"
                                                     };
+                                                    var statusIcon = booking.Status switch
+                                                    {
+                                                        BookingStatus.Pending => "hourglass-half",
+                                                        BookingStatus.Confirmed => "check-circle",
+                                                        BookingStatus.Cancelled => "times-circle",
+                                                        BookingStatus.Completed => "check-double",
+                                                        _ => "info-circle"
+                                                    };
                                                 }
-                                                <span class="badge @statusClass">@booking.Status</span>
+                                                <span class="badge @statusClass">
+                                                    <i class="fas fa-@statusIcon me-1"></i>
+                                                    @booking.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button"
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Actions
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <button type="button" class="dropdown-item"
+                                                                    onclick="showBookingDetails(@booking.Id)">
+                                                                <i class="fas fa-info-circle me-2"></i>View Details
+                                                            </button>
+                                                        </li>
+
+                                                        @if (booking.Status == BookingStatus.Pending)
+                                                        {
+                                                            <li>
+                                                                <form asp-controller="Dashboard" asp-action="ConfirmBooking"
+                                                                      asp-route-id="@booking.Id" method="post">
+                                                                    <button type="submit" class="dropdown-item">
+                                                                        <i class="fas fa-check me-2"></i>Confirm
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        }
+
+                                                        @if (booking.Status == BookingStatus.Pending || booking.Status == BookingStatus.Confirmed)
+                                                        {
+                                                            <li>
+                                                                <form asp-controller="Dashboard" asp-action="CancelBooking"
+                                                                      asp-route-id="@booking.Id" method="post"
+                                                                      onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                                                    <button type="submit" class="dropdown-item">
+                                                                        <i class="fas fa-times me-2"></i>Cancel
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        }
+
+                                                        @if (booking.Status == BookingStatus.Confirmed)
+                                                        {
+                                                            <li>
+                                                                <form asp-controller="Dashboard" asp-action="CompleteBooking"
+                                                                      asp-route-id="@booking.Id" method="post">
+                                                                    <button type="submit" class="dropdown-item">
+                                                                        <i class="fas fa-check-double me-2"></i>Mark as Completed
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
                                             </td>
                                         </tr>
                                     }
                                 </tbody>
                             </table>
-                        }
-                        else
-                        {
-                            <p>No bookings found.</p>
-                        }
-                    </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-5 text-center">
+                            <i class="fas fa-bed fs-1 text-muted mb-3"></i>
+                            <h5>No bookings found.</h5>
+                            <p class="text-muted">Bookings will appear here once customers make reservations.</p>
+                        </div>
+                    }
                 </div>
             </div>
         </section>
     </div>
 </div>
-<!-- Add JavaScript for booking actions -->
-<script>
-    function confirmBooking(bookingId) {
-        if (confirm('Are you sure you want to confirm this booking?')) {
-            // Here you would normally make an AJAX call to update the booking status
-            // For demo purposes, we'll just reload the page
-            alert('Booking ' + bookingId + ' confirmed successfully!');
-            window.location.reload();
-        }
-    }
 
-    function cancelBooking(bookingId) {
-        if (confirm('Are you sure you want to cancel this booking?')) {
-            // Here you would normally make an AJAX call to update the booking status
-            alert('Booking ' + bookingId + ' cancelled successfully!');
-            window.location.reload();
-        }
-    }
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingDetailsModalLabel">Booking Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="bookingDetailsContent">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    function completeBooking(bookingId) {
-        if (confirm('Are you sure you want to mark this booking as completed?')) {
-            // Here you would normally make an AJAX call to update the booking status
-            alert('Booking ' + bookingId + ' marked as completed!');
-            window.location.reload();
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script>
+        // Function to show booking details
+        function showBookingDetails(bookingId) {
+            fetch(`/Home/GetBookingDetails/${bookingId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('bookingDetailsContent').innerHTML = html;
+                    var modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+                    modal.show();
+                })
+                .catch(error => console.error('Error fetching booking details:', error));
         }
-    }
 
-    function viewDetails(bookingId) {
-        // Here you would normally navigate to a details page or open a modal
-        alert('Viewing details for booking ' + bookingId);
-    }
-</script>
+        // Booking filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterLinks = document.querySelectorAll('[data-filter]');
+            const bookingRows = document.querySelectorAll('#bookingsTable tbody tr');
+
+            filterLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const filterValue = this.getAttribute('data-filter');
+
+                    bookingRows.forEach(row => {
+                        if (filterValue === 'all' || row.getAttribute('data-status') === filterValue) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+
+                    // Update dropdown text
+                    document.getElementById('filterDropdown').textContent =
+                        'Filter: ' + this.textContent.trim();
+                });
+            });
+        });
+    </script>
+}
