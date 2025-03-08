@@ -1,5 +1,5 @@
 ﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
     {
         Layout = parentLayout.ToString();
     }
@@ -9,22 +9,26 @@
     }
 }
 
-<h1>Manage your account</h1>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
+<div class="container profile-container">
+    <div class="profile-header">
+        <h3>Manage Your Account</h3>
+        <p class="text-muted">Update your account settings and preferences</p>
+    </div>
+
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3 profile-nav">
             <partial name="_ManageNav" />
         </div>
         <div class="col-md-9">
-            @RenderBody()
+            <div class="profile-content">
+                @RenderBody()
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-
     @RenderSection("Scripts", required: false)
 }
