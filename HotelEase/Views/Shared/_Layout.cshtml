@@ -8,6 +8,7 @@
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer-fix.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/HotelEase.styles.css" asp-append-version="true" />
 </head>
 <body style="background-color: #EFF1F3">
@@ -45,22 +46,19 @@
             </div>
         </nav>
     </header>
-   
 
-    <div>
+    <!-- Content wrapper div added -->
+    <div class="content-wrapper">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted text-center py-3">
+    <footer class="footer text-muted text-center py-3">
         <div class="container">
             &copy; 2025 - HotelEase - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
-
-    <!-- Bootstrap JS Bundle with Popper -->
- 
 
     <!-- jQuery and Custom Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
