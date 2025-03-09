@@ -333,6 +333,16 @@ body {
         margin-bottom: 1.5rem;
     }
 
+/*About us Facilities Image*/
+.fixed-img {
+    height: 200px; 
+    object-fit: cover; 
+    width: 100%; 
+}
+
+
+
+
 .team-member-card {
     border-radius: 12px;
     overflow: hidden;

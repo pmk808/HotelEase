@@ -75,6 +75,12 @@
                 <button id="registerSubmit" type="submit" class="w-100 btn btn-lg text-white" style="background-color: #D77A61; border-radius: 10px;">
                     Register
                 </button>
+                <div class="text-center text-white mt-4">
+                    <p class="mb-0">Already have an account?</p>
+                    <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">
+                        Sign in!
+                    </a>
+                </div>
             </form>
         </div>
 

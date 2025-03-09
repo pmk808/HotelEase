@@ -10,7 +10,12 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/footer-fix.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/HotelEase.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/homepage.css" asp-append-version="true">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+
+
 </head>
+
 <body style="background-color: #EFF1F3">
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow">
@@ -54,16 +59,30 @@
         </main>
     </div>
 
-    <footer class="footer text-muted text-center py-3">
+    <footer class="footer text-white text-center py-3">
         <div class="container">
-            &copy; 2025 - HotelEase - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - <span class="fw-bold">HotelEase</span>
+            - <a asp-area="" asp-controller="Home" asp-action="Privacy">About Us</a> |
+            <a href="mailto:info@hotelease.com">Send Us An E-mail</a> |
+            <span>Phone: +1 (555) 123-4567</span>
         </div>
     </footer>
 
     <!-- jQuery and Custom Scripts -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            AOS.init({
+                duration: 1000, // Animation duration in milliseconds
+                once: true, // Animation runs only once (no fade-out when scrolling up)
+                easing: 'ease-out', // Smooth easing effect
+            });
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

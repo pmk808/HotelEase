@@ -1,0 +1,52 @@
+﻿/* Rooms Section */
+#rooms {
+    background: #223843;
+    padding: 50px 0;
+}
+
+/* Room Cards */
+.rooms-card {
+    position: relative;
+    width: 100%;
+    max-width: 400px; /* Restrict max width for a uniform size */
+    height: 520px; /* Adjusted to a reasonable height */
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+    .rooms-card:hover {
+        transform: scale(1.05);
+    }
+
+/* Ensure image fills the card */
+.rooms-image {
+    width: 100%;
+    height: 85%; /* Allows space for the title */
+    object-fit: cover;
+}
+
+/* Room Title Overlay */
+.rooms-title {
+    width: 100%;
+    background: white;
+    color: black;
+    padding: 12px 0;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+
+}
+
+/*Image Size*/
+.custom-img {
+    max-width: 500px; /* Adjust size */
+    height: auto; /* Maintain aspect ratio */
+}
+
+
