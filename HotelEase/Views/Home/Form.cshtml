@@ -115,6 +115,14 @@
                                         {
                                             <option value="Twin">Twin</option>
                                         }
+                                        @if (Model.RoomBedType == "Double")
+                                        {
+                                            <option value="Double" selected>Double</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Double">Double</option>
+                                        }
 
                                         @if (Model.RoomBedType == "Queen")
                                         {
@@ -132,6 +140,23 @@
                                         else
                                         {
                                             <option value="King">King</option>
+                                        }
+                                        @if (Model.RoomBedType == "Family")
+                                        {
+                                            <option value="Family" selected>Family</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Family">Family</option>
+                                        }
+
+                                        @if (Model.RoomBedType == "Presidential")
+                                        {
+                                            <option value="Presidential" selected>Presidential</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="Presidential">Presidential</option>
                                         }
                                     </select>
                                 </div>
